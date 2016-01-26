@@ -2,7 +2,7 @@ package org.garage.guru.model
 
 import scala.util.{Success, Try}
 
-sealed trait ParkingLot{
+sealed abstract class ParkingLot{
   def lotLocation : LotLocation
 }
 final case class FreeParkingLot(lotLocation: LotLocation) extends ParkingLot
