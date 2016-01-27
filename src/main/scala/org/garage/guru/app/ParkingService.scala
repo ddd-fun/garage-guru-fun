@@ -21,7 +21,7 @@ trait ParkingService {
       for{
         takenLot <- repo.findTakenLot(vehicle)
         freeLot <- ParkingLotAggregate.clean(takenLot)
-        savedLot <- repo.save(takenLot)
+        savedLot <- repo.save(freeLot)
       }yield{savedLot.lotLocation}
     }
   }
