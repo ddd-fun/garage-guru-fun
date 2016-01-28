@@ -30,4 +30,5 @@ class InMemoryRepository extends Repository{
     repo.+=(freeParkingLot.lotLocation -> freeParkingLot)
   }
 
+  override def freeLots() = Success(FreeParkingLots(repo.values.count(_.isInstanceOf[FreeParkingLot])))
 }

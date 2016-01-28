@@ -13,5 +13,6 @@ trait Repository {
 
    def save[L <: ParkingLot](parkingLot: L) : Try[L]
 
+   def freeLots() : Try[FreeParkingLots]
 
  }

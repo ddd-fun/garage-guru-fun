@@ -1,6 +1,6 @@
 package org.garage.guru.app
 
-import org.garage.guru.model.{ParkingLotAggregate, Repository, LotLocation, Vehicle}
+import org.garage.guru.model._
 
 import scala.util.Try
 
@@ -26,6 +26,8 @@ trait ParkingService {
     }
   }
 
+
+  def freeLots() : Repository => Try[FreeParkingLots] = {r => r.freeLots()}
 
 
 }

@@ -15,6 +15,7 @@ object Main  {
     for (ln <- io.Source.stdin.getLines){
       "(\\w*)\\s*(\\w*)".r.findFirstMatchIn(ln).map(_.subgroups.filter(!_.isEmpty)) match {
         case Some(List("exit")) => scala.util.control.Breaks.break();
+        case Some(List("free")) => println( ParkingServiceObj.freeLots()(repository) );
         case Some(List("park", v)) => println( ParkingServiceObj.park(Vehicle(v))(repository) );
         case Some(List("clean", v)) => println( ParkingServiceObj.cleanParkingLot(Vehicle(v))(repository) )
         case _=> println("unknown command "+ln)
