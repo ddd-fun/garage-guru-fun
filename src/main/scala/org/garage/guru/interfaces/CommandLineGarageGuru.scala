@@ -1,9 +1,9 @@
-package org.garage.guru
+package org.garage.guru.interfaces
 
 import org.garage.guru.app.ParkingService
-import org.garage.guru.model.{LotLocation, FreeParkingLot, Vehicle}
+import org.garage.guru.model.{FreeParkingLot, LotLocation, Vehicle}
 
-object Main  {
+object CommandLineGarageGuru  {
 
   def main(args: Array[String]) {
 
