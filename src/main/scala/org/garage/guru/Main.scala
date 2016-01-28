@@ -7,16 +7,25 @@ object Main  {
 
   def main(args: Array[String]) {
 
-    import org.garage.guru.infrastructure.InMemoryRepository
 
-    val repository = new InMemoryRepository
-    repository.addFreeLot(FreeParkingLot(LotLocation("A", "1")))
 
-    println( ParkingServiceObj.park(Vehicle("AA123"))(repository) )
+    for (ln <- io.Source.stdin.getLines){
+      if("exit" == ln) scala.util.control.Breaks.break()
+      println(ln)
+    }
 
-    println( ParkingServiceObj.cleanParkingLot(Vehicle("AA123"))(repository) )
 
-    println( ParkingServiceObj.park(Vehicle("AA122"))(repository) )
+
+//    import org.garage.guru.infrastructure.InMemoryRepository
+//
+//    val repository = new InMemoryRepository
+//    repository.addFreeLot(FreeParkingLot(LotLocation("A", "1")))
+//
+//    println( ParkingServiceObj.park(Vehicle("AA123"))(repository) )
+//
+//    println( ParkingServiceObj.cleanParkingLot(Vehicle("AA123"))(repository) )
+//
+//    println( ParkingServiceObj.park(Vehicle("AA122"))(repository) )
 
   }
 
