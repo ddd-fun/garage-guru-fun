@@ -1,4 +1,4 @@
-package org.garage.guru.model
+package org.garage.guru.domain
 
 
 case class FreeParkingLots(number:Int)

@@ -1,6 +1,6 @@
-package org.garage.guru.app
+package org.garage.guru.application
 
-import org.garage.guru.model._
+import org.garage.guru.domain._
 
 import scala.util.Try
 
@@ -9,7 +9,7 @@ trait ParkingService {
   def park(vehicle: Vehicle) : Repository => Try[LotLocation] = {
     repo => {
       for{
-          freeLot <- repo.findFreeLot()
+          freeLot <- repo.findFreeLot(vehicle)
           takenLot <- ParkingLotAggregate.take(freeLot, vehicle)
           savedLot <- repo.save(takenLot)
       }yield{savedLot.lotLocation}

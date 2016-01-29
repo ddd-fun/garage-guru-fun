@@ -1,4 +1,4 @@
-package org.garage.guru.model
+package org.garage.guru.domain
 
 
 
@@ -7,7 +7,7 @@ import scala.util.Try
 
 trait Repository {
 
-   def findFreeLot() : Try[FreeParkingLot]
+   def findFreeLot(vehicle: Vehicle) : Try[FreeParkingLot]
 
    def findTakenLot(vehicle: Vehicle) : Try[TakenParkingLot]
 
