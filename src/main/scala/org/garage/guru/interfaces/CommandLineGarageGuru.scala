@@ -19,14 +19,14 @@ object CommandLineGarageGuru  {
 
         case Some(List("exit")) => scala.util.control.Breaks.break();
 
-        case Some(List("free")) => println( ParkingServiceObj.freeLots()(Repository) );
+        case Some(List("free")) => println( ParkingServiceObj.freeLots()(Repository).get );
 
         case Some(List("park", t, v)) =>  Vehicle(t,v) match {
-               case Some(v) => println( ParkingServiceObj.park(v)(Repository) )
+               case Some(v) => println( ParkingServiceObj.park(v)(Repository).get )
                case _=> println("unknown command "+ln) }
 
         case Some(List("clean", t, v)) => Vehicle(t,v) match {
-               case Some(v) => println( ParkingServiceObj.cleanParkingLot(v)(Repository) )
+               case Some(v) => println( ParkingServiceObj.cleanParkingLot(v)(Repository).get )
                case _=> println("unknown command "+ln) }
 
         case _=> println("unknown command "+ln)
