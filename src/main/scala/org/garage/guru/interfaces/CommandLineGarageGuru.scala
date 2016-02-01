@@ -10,6 +10,8 @@ object CommandLineGarageGuru  {
 
 
     Repository.addFreeLot(FreeParkingLot(LotLocation("A", "1"), CarSpec or MotorbikeSpec))
+    Repository.addFreeLot(FreeParkingLot(LotLocation("A", "2"), CarSpec))
+    Repository.addFreeLot(FreeParkingLot(LotLocation("B", "1"), MotorbikeSpec))
 
     for (ln <- io.Source.stdin.getLines){
       "(\\w*)\\s*(\\w*)\\s*(\\w*)".r.findFirstMatchIn(ln).map(_.subgroups.filter(!_.isEmpty)) match {

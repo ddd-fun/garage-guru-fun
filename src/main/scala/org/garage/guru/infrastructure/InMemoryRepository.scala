@@ -34,5 +34,10 @@ class InMemoryRepository extends Repository{
     repo.+=(freeParkingLot.lotLocation -> freeParkingLot)
   }
 
-  override def freeLots() = Success(FreeParkingLots(repo.values.count(_.isInstanceOf[FreeParkingLot])))
+  override def freeLots() = {
+   val groupBySpec:Map[VehicleSpec, Int] = repo.values.filter(_.isInstanceOf[FreeParkingLot])
+    .groupBy(_.specification).mapValues(_.seq.size)
+
+    Success(FreeParkingLots(groupBySpec))
+  }
 }
