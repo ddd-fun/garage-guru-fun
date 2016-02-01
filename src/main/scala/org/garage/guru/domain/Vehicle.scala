@@ -10,8 +10,8 @@ case class Motorbike(override val licensePlateNum:String) extends Vehicle
 
 object Vehicle{
   def apply(vehicleType: String, licensePlate:String): Option[Vehicle] ={
-      if("car".equalsIgnoreCase(vehicleType))  Some(Car(licensePlate))
-      if("motorbike".equalsIgnoreCase(vehicleType)) Some( Motorbike(licensePlate))
+      if("car".equalsIgnoreCase(vehicleType)) return  Some(Car(licensePlate))
+      if("motorbike".equalsIgnoreCase(vehicleType)) return Some( Motorbike(licensePlate))
      None
   }
 }

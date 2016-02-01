@@ -12,7 +12,9 @@ object CommandLineGarageGuru  {
 
     val orspec =  cs.or(MotorbikeSpec)
 
-    println(CarSpec or MotorbikeSpec isSatisfiedBy Motorbike("sagfei") )
+    //println(CarSpec or MotorbikeSpec isSatisfiedBy Motorbike("sagfei") )
+
+   println( "(\\w*)\\s*(\\w*)\\s*(\\w*)".r.findFirstMatchIn("park car"))
 
 
     import org.garage.guru.infrastructure.InMemoryRepository
@@ -23,8 +25,8 @@ object CommandLineGarageGuru  {
       "(\\w*)\\s*(\\w*)\\s*(\\w*)".r.findFirstMatchIn(ln).map(_.subgroups.filter(!_.isEmpty)) match {
         case Some(List("exit")) => scala.util.control.Breaks.break();
         case Some(List("free")) => println( ParkingServiceObj.freeLots()(repository) );
-        case Some(List("park", t, v)) => Vehicle(t,v).map( veh =>  ParkingServiceObj.park(veh)(repository) ).map( println(_) ).orElse(None);
-        case Some(List("clean", t, v)) => Vehicle(t,v).map( veh =>  println( ParkingServiceObj.cleanParkingLot(veh)(repository) ) );
+        case Some(List("park", t, v)) =>  Vehicle(t,v) match { case Some(v) => println( ParkingServiceObj.park(v)(repository) ) case _=> println("unknown command "+ln) }
+        case Some(List("clean", t, v)) => Vehicle(t,v) match { case Some(v) => println( ParkingServiceObj.cleanParkingLot(v)(repository) ) case _=> println("unknown command "+ln) }
         case _=> println("unknown command "+ln)
       }
     }
