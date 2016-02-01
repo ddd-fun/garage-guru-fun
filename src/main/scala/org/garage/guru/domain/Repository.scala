@@ -9,7 +9,7 @@ trait Repository {
 
    def findFreeLot(vehicle: Vehicle) : Try[FreeParkingLot]
 
-   def findTakenLot(vehicle: Vehicle) : Try[TakenParkingLot]
+   def findTakenLot(vehicleId: Vehicle) : Try[TakenParkingLot]
 
    def save[L <: ParkingLot](parkingLot: L) : Try[L]
 
