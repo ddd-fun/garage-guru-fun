@@ -13,6 +13,8 @@ object CommandLineGarageGuru  {
     Repository.addFreeLot(FreeParkingLot(LotLocation("A", "2"), CarSpec))
     Repository.addFreeLot(FreeParkingLot(LotLocation("B", "1"), MotorbikeSpec))
 
+    println(WelcomeMessage.message)
+
     for (ln <- io.Source.stdin.getLines){
 
       "(\\w*)\\s*(\\w*)\\s*(\\w*)".r.findFirstMatchIn(ln).map(_.subgroups.filter(!_.isEmpty)) match {
@@ -39,5 +41,24 @@ object CommandLineGarageGuru  {
   object ParkingServiceObj extends ParkingService
 
   object Repository extends InMemoryRepository
+
+
+  object WelcomeMessage {
+   private val msg = StringBuilder.newBuilder
+         .++=("Welcome to Garage Guru command line. Please, enter a command:")
+           .++=("\n")
+         .++=("- for getting number of available lots, type: free")
+           .++=("\n")
+         .++=("- for parking your vehicle, type: park <vehicle type>  <vehicle id>, for ex. park CAR AH895JK")
+           .++=("\n")
+         .++=("- for find your vehicle, type: find <vehicle id>, for ex. find AH895JK")
+           .++=("\n")
+         .++=("- for cleaning parking lot, type: clean <vehicle id>, for ex. clean AH895JK")
+           .++=("\n")
+         .++=("- if you get annoyed, type: exit")
+           .++=("\n")
+         .++=("---------------------------------------------------------------------------")
+   def message = msg.toString
+  }
 
 }
