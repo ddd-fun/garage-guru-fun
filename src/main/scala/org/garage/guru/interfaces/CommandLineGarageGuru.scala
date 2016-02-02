@@ -1,6 +1,6 @@
 package org.garage.guru.interfaces
 
-import org.garage.guru.application.ParkingService
+import org.garage.guru.application.ParkingAppService
 import org.garage.guru.domain._
 import org.garage.guru.infrastructure.InMemoryRepository
 
@@ -21,14 +21,14 @@ object CommandLineGarageGuru  {
 
         case Some(List("exit")) => scala.util.control.Breaks.break();
 
-        case Some(List("free")) => println( ParkingServiceObj.freeLots()(Repository).get );
+        case Some(List("free")) => println( ParkingAppServiceObj$.freeLots()(Repository).get );
 
         case Some(List("park", t, v)) =>  Vehicle(t,v) match {
-               case Some(v) => println( ParkingServiceObj.park(v)(Repository).get )
+               case Some(v) => println( ParkingAppServiceObj$.park(v)(Repository).get )
                case _=> println("unknown command "+ln) }
 
         case Some(List("clean", t, v)) => Vehicle(t,v) match {
-               case Some(v) => println( ParkingServiceObj.cleanParkingLot(v)(Repository).get )
+               case Some(v) => println( ParkingAppServiceObj$.cleanParkingLot(v)(Repository).get )
                case _=> println("unknown command "+ln) }
 
         case _=> println("unknown command "+ln)
@@ -38,7 +38,7 @@ object CommandLineGarageGuru  {
   }
 
 
-  object ParkingServiceObj extends ParkingService
+  object ParkingAppServiceObj$ extends ParkingAppService
 
   object Repository extends InMemoryRepository
 

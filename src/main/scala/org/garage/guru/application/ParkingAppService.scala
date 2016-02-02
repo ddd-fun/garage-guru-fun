@@ -4,7 +4,7 @@ import org.garage.guru.domain._
 
 import scala.util.Try
 
-trait ParkingService {
+trait ParkingAppService {
 
   def park(vehicle: Vehicle) : Repository => Try[LotLocation] = {
     repo => {
