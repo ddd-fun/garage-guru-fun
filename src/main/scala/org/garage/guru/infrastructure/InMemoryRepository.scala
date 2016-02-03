@@ -18,11 +18,11 @@ class InMemoryRepository extends Repository{
         .getOrElse(Failure(new RuntimeException("free lot is not found for "+vehicle)))
   }
 
-  override def findTakenLot(vehicle: Vehicle): Try[TakenParkingLot] = {
-    val takenLotByVehicle = (lot: ParkingLot) => lot.isInstanceOf[TakenParkingLot] && lot.asInstanceOf[TakenParkingLot].vehicle == vehicle
+  override def findTakenLot(vehicleId: VehicleId): Try[TakenParkingLot] = {
+    val takenLotByVehicle = (lot: ParkingLot) => lot.isInstanceOf[TakenParkingLot] && lot.asInstanceOf[TakenParkingLot].vehicle.vehicleId == vehicleId
     repo.values.find(takenLotByVehicle)
       .map(fl => Success(fl.asInstanceOf[TakenParkingLot]))
-        .getOrElse(Failure(new RuntimeException("lot taken by "+vehicle+" is not found")))
+        .getOrElse(Failure(new RuntimeException("lot taken by "+vehicleId+" is not found")))
    }
 
   override def save[L <: ParkingLot](parkingLot: L): Try[L] = {

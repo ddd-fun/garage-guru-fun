@@ -6,28 +6,27 @@ import scala.util.Try
 
 trait ParkingAppService {
 
-  def park(vehicle: Vehicle) : Repository => Try[LotLocation] = {
-    repo => {
-      for{
-          freeLot <- repo.findFreeLot(vehicle)
-          takenLot <- ParkingLotAggregate.take(freeLot, vehicle)
-          savedLot <- repo.save(takenLot)
-      }yield{savedLot.lotLocation}
-    }
-  }
+  val parkingService : ParkingLotService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId]
 
-  def cleanParkingLot(vehicle: Vehicle) : Repository => Try[LotLocation] = {
-    repo =>{
-      for{
-        takenLot <- repo.findTakenLot(vehicle)
-        freeLot <- ParkingLotAggregate.clean(takenLot)
-        savedLot <- repo.save(freeLot)
-      }yield{savedLot.lotLocation}
-    }
+  def findParkedVehicle(vehicleId: VehicleId) : Repository => Try[LotLocation] = { repo =>
+    parkingService.findParkedVehicle(vehicleId)(repo).map(_.lotLocation)
   }
-
 
   def freeLots() : Repository => Try[FreeParkingLots] = {r => r.freeLots()}
 
+  def tryToPark(vehicle: Vehicle) : Repository => Try[LotLocation] = { repo =>
+    for{
+        takenLot <- parkingService.tryToPark(vehicle)(repo)
+        _ <- repo.save(takenLot)
+    }yield(takenLot.lotLocation)
+
+  }
+
+  def cleanLotTakenBy(vehicleId: VehicleId) : Repository => Try[LotLocation] = { repo =>
+    for{
+      freeLot <- parkingService.cleanLotTakenBy(vehicleId)(repo)
+      _ <- repo.save(freeLot)
+    }yield(freeLot.lotLocation)
+  }
 
 }

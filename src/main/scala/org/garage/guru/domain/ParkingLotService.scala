@@ -7,7 +7,7 @@ trait ParkingLotService[FreeLot, TakenLot, Vehicle, VehicleId] {
 
   def park(freeLot: FreeLot, vehicle: Vehicle) : Repository => Try[TakenLot]
 
-  def clean(takenLot: TakenLot) : Repository => Try[FreeLot]
+  def clean(takenLot: TakenLot, vehicleId: VehicleId) : Repository => Try[FreeLot]
 
   def findFreeLotFor(vehicle: Vehicle) : Repository => Try[FreeLot]
 
@@ -24,7 +24,7 @@ trait ParkingLotService[FreeLot, TakenLot, Vehicle, VehicleId] {
   def cleanLotTakenBy(vehicleId: VehicleId) : Repository => Try[FreeLot] = { repo =>
     for{
         takenLot <- findParkedVehicle(vehicleId)(repo)
-        freeLot  <- clean(takenLot)(repo)
+        freeLot  <- clean(takenLot, vehicleId)(repo)
     }yield(freeLot)
   }
 
