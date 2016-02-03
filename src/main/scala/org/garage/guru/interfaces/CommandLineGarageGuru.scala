@@ -27,9 +27,13 @@ object CommandLineGarageGuru  {
                case Some(v) => println( ParkingAppService.tryToPark(v)(Repository).get )
                case _=> println("unknown command "+ln) }
 
-        case Some(List("clean", t, v)) => Vehicle(t,v) match {
-               case Some(v) => println( ParkingAppService.cleanLotTakenBy(v.vehicleId)(Repository).get )
+        case Some(List("clean", v)) => Vehicle.id(v) match {
+               case Some(v) => println( ParkingAppService.cleanLotTakenBy(v)(Repository).get )
                case _=> println("unknown command "+ln) }
+
+        case Some(List("find", v)) => Vehicle.id(v) match {
+          case Some(v) => println( ParkingAppService.findParkedVehicle(v)(Repository).get )
+          case _=> println("unknown command "+ln) }
 
         case _=> println("unknown command "+ln)
       }
