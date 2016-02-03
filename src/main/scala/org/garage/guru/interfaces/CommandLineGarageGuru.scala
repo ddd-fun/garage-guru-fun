@@ -13,7 +13,7 @@ object CommandLineGarageGuru  {
     Repository.addFreeLot(FreeParkingLot(LotLocation("A", "2"), CarSpec))
     Repository.addFreeLot(FreeParkingLot(LotLocation("B", "1"), MotorbikeSpec))
 
-    println(WelcomeMessage.message)
+    println(welcomeMsg)
 
     for (ln <- io.Source.stdin.getLines){
 
@@ -51,8 +51,8 @@ object CommandLineGarageGuru  {
   object Repository extends InMemoryRepository
 
 
-  object WelcomeMessage {
-   private val msg = StringBuilder.newBuilder
+
+  val welcomeMsg = StringBuilder.newBuilder
          .++=("Welcome to Garage Guru command line. Please, enter a command:")
            .++=("\n")
          .++=("- for getting number of available lots, type: free")
@@ -65,8 +65,7 @@ object CommandLineGarageGuru  {
            .++=("\n")
          .++=("- if you get annoyed, type: exit")
            .++=("\n")
-         .++=("---------------------------------------------------------------------------")
-   def message = msg.toString
-  }
+         .++=("---------------------------------------------------------------------------").toString()
+
 
 }
