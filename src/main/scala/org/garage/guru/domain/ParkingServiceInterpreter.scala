@@ -3,7 +3,7 @@ package org.garage.guru.domain
 import scala.util.{Failure, Success, Try}
 
 
-trait ParkingServiceInterpreter extends ParkingLotService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId]{
+trait ParkingServiceInterpreter extends ParkingService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId]{
 
   override def park(freeLot: FreeParkingLot, vehicle: Vehicle): (Repository) => Try[TakenParkingLot] = {
     repo =>  Success(new TakenParkingLot(freeLot.lotLocation, freeLot.specification, vehicle))

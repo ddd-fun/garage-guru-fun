@@ -6,7 +6,7 @@ import scala.util.Try
 
 trait ParkingAppService {
 
-  val parkingService : ParkingLotService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId]
+  val parkingService : ParkingService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId]
 
   def findParkedVehicle(vehicleId: VehicleId) : Repository => Try[LotLocation] = { repo =>
     parkingService.findParkedVehicle(vehicleId)(repo).map(_.lotLocation)

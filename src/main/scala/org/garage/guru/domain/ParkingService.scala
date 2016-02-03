@@ -3,7 +3,7 @@ package org.garage.guru.domain
 import scala.util.Try
 
 
-trait ParkingLotService[FreeLot, TakenLot, Vehicle, VehicleId] {
+trait ParkingService[FreeLot, TakenLot, Vehicle, VehicleId] {
 
   def park(freeLot: FreeLot, vehicle: Vehicle) : Repository => Try[TakenLot]
 

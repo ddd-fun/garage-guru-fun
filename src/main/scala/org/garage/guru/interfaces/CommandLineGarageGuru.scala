@@ -43,10 +43,10 @@ object CommandLineGarageGuru  {
 
 
   object ParkingAppService extends ParkingAppService{
-    override val parkingService = ParkingLotService
+    override val parkingService = ParkingService
   }
 
-  object ParkingLotService extends ParkingServiceInterpreter
+  object ParkingService extends ParkingServiceInterpreter
 
   object Repository extends InMemoryRepository
 
