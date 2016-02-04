@@ -1,7 +1,6 @@
 package org.garage.guru.domain
 
 
-
 import scala.util.Try
 
 

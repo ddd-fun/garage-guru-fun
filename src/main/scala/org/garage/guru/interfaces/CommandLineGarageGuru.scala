@@ -21,18 +21,18 @@ object CommandLineGarageGuru  {
 
         case Some(List("exit")) => scala.util.control.Breaks.break();
 
-        case Some(List("free")) => println( ParkingAppService.freeLots()(Repository).get );
+        case Some(List("free")) => println( ParkingAppService.freeLots().get );
 
         case Some(List("park", t, v)) =>  Vehicle(t,v) match {
-               case Some(v) => println( ParkingAppService.tryToPark(v)(Repository).get )
+               case Some(v) => println( ParkingAppService.parkVehicle(v) )
                case _=> println("unknown command "+ln) }
 
         case Some(List("clean", v)) => Vehicle.id(v) match {
-               case Some(v) => println( ParkingAppService.cleanLotTakenBy(v)(Repository).get )
+               case Some(v) => println( ParkingAppService.takeAwayVehicle(v) )
                case _=> println("unknown command "+ln) }
 
         case Some(List("find", v)) => Vehicle.id(v) match {
-          case Some(v) => println( ParkingAppService.findParkedVehicle(v)(Repository).get )
+          case Some(v) => println( ParkingAppService.findParkedVehicle(v) )
           case _=> println("unknown command "+ln) }
 
         case _=> println("unknown command "+ln)
@@ -44,12 +44,14 @@ object CommandLineGarageGuru  {
 
   object ParkingAppService extends ParkingAppService{
     override val parkingService = ParkingService
+    override val repo = Repository
   }
 
-  object ParkingService extends ParkingServiceInterpreter
+  object ParkingService extends ParkingServiceInterpreter{
+    override val repo = Repository
+  }
 
   object Repository extends InMemoryRepository
-
 
 
   val welcomeMsg = StringBuilder.newBuilder

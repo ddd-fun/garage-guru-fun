@@ -5,27 +5,27 @@ import scala.util.Try
 
 trait ParkingService[FreeLot, TakenLot, Vehicle, VehicleId] {
 
-  def park(freeLot: FreeLot, vehicle: Vehicle) : Repository => Try[TakenLot]
+  def findFreeLot(vehicle: Vehicle) : Try[FreeLot]
 
-  def clean(takenLot: TakenLot, vehicleId: VehicleId) : Repository => Try[FreeLot]
+  def findParkedVehicle(vehicleId: VehicleId) : Try[TakenLot]
 
-  def findFreeLotFor(vehicle: Vehicle) : Repository => Try[FreeLot]
+  def takeParkingLot(freeLot: FreeLot, vehicle: Vehicle): Try[TakenLot]
 
-  def findParkedVehicle(vehicleId: VehicleId) : Repository => Try[TakenLot]
+  def cleanParkingLot(takenLot: TakenLot): Try[FreeLot]
 
-  def tryToPark(vehicle: Vehicle) : Repository => Try[TakenLot] = { repo => {
+  def parkVehicle(vehicle: Vehicle) : Try[TakenLot] = {
     for{
-       freeLot <- findFreeLotFor(vehicle)(repo)
-       takenLot  <- park(freeLot, vehicle)(repo)
-    }yield(takenLot)
-   }
+        freeLot <- findFreeLot(vehicle)
+        takenLot <- takeParkingLot(freeLot, vehicle)
+    }yield (takenLot)
   }
 
-  def cleanLotTakenBy(vehicleId: VehicleId) : Repository => Try[FreeLot] = { repo =>
+  def takeAwayVehicle(vehicleId: VehicleId) : Try[FreeLot] = {
     for{
-        takenLot <- findParkedVehicle(vehicleId)(repo)
-        freeLot  <- clean(takenLot, vehicleId)(repo)
-    }yield(freeLot)
+         takenLot <- findParkedVehicle(vehicleId)
+         freeLot <- cleanParkingLot(takenLot)
+    }yield (freeLot)
   }
+
 
 }
