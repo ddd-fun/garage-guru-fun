@@ -12,7 +12,7 @@ class InMemoryRepository extends Repository{
 
 
   override def findFreeLot(vehicle: Vehicle): Try[FreeParkingLot] = {
-    val suitableFreeLot = (lot: ParkingLot) => lot.isInstanceOf[FreeParkingLot] && lot.specification.isSatisfiedBy(vehicle)
+    val suitableFreeLot = (lot: ParkingLot) => lot.isInstanceOf[FreeParkingLot] && lot.acceptedVehicles.isSatisfiedBy(vehicle)
     repo.values.find(suitableFreeLot)
       .map(fl => Success(fl.asInstanceOf[FreeParkingLot]))
         .getOrElse(Failure(new RuntimeException("free lot is not found for "+vehicle)))
@@ -36,7 +36,7 @@ class InMemoryRepository extends Repository{
 
   override def freeLots() = {
    val groupBySpec:Map[VehicleSpec, Int] = repo.values.filter(_.isInstanceOf[FreeParkingLot])
-    .groupBy(_.specification).mapValues(_.seq.size)
+    .groupBy(_.acceptedVehicles).mapValues(_.seq.size)
 
     Success(FreeParkingLots(groupBySpec))
   }

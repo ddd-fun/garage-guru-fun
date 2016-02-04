@@ -6,7 +6,7 @@ import scala.util.{Failure, Success, Try}
 trait ParkingServiceInterpreter extends ParkingService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId]{
 
   override def park(freeLot: FreeParkingLot, vehicle: Vehicle): (Repository) => Try[TakenParkingLot] = {
-    repo =>  Success(new TakenParkingLot(freeLot.lotLocation, freeLot.specification, vehicle))
+    repo =>  Success(new TakenParkingLot(freeLot.lotLocation, freeLot.acceptedVehicles, vehicle))
   }
 
   override def findParkedVehicle(vehicleId: VehicleId): (Repository) => Try[TakenParkingLot] = { repo =>
@@ -15,7 +15,7 @@ trait ParkingServiceInterpreter extends ParkingService[FreeParkingLot, TakenPark
 
   override def clean(takenLot: TakenParkingLot, vehicleId: VehicleId): (Repository) => Try[FreeParkingLot] = { repo =>
     if(takenLot.vehicle.vehicleId == vehicleId){
-       Success(new FreeParkingLot(takenLot.lotLocation, takenLot.specification))
+       Success(new FreeParkingLot(takenLot.lotLocation, takenLot.acceptedVehicles))
     } else {
        Failure(new RuntimeException("lot is not taken by vehicle " + vehicleId))
     }
