@@ -4,14 +4,14 @@ package org.garage.guru.domain
 import scala.util.Try
 
 
-trait Repository {
+trait Repository[FreeLot, TakenLot, Vehicle, VehicleId] {
 
-   def findFreeLot(vehicle: Vehicle) : Try[FreeParkingLot]
+   def findFreeLot(vehicle: Vehicle): Try[FreeLot]
 
-   def findTakenLot(vehicleId: VehicleId) : Try[TakenParkingLot]
+   def findTakenLot(vehicleId: VehicleId): Try[TakenLot]
 
-   def save[L <: ParkingLot](parkingLot: L) : Try[L]
+   def save[L <: ParkingLot](parkingLot: L): Try[L]
 
-   def freeLots() : Try[FreeParkingLots]
+   def freeLots(): Try[FreeParkingLots]
 
  }

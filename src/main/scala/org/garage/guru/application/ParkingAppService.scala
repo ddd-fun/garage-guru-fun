@@ -8,20 +8,22 @@ trait ParkingAppService {
 
   val parkingService: ParkingService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId]
 
-  val repo: Repository
 
-  def findParkedVehicle(vehicleId: VehicleId): Try[LotLocation] = {
-    parkingService.findParkedVehicle(vehicleId).map(_.lotLocation)
+  def findParkedVehicle(vehicleId: VehicleId): Repository[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId] => Try[LotLocation] = {
+    repo => parkingService.findParkedVehicle(vehicleId)(repo).map(_.lotLocation)
   }
 
-  def freeLots(): Try[FreeParkingLots] = repo.freeLots()
-
-  def parkVehicle(vehicle: Vehicle): Try[LotLocation] ={
-    parkingService.parkVehicle(vehicle).map(_.lotLocation)
+  def freeLots(): Repository[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId] => Try[FreeParkingLots] = {
+    repo => repo.freeLots()
   }
 
-  def takeAwayVehicle(vehicleId: VehicleId): Try[LotLocation] = {
-    parkingService.takeAwayVehicle(vehicleId).map(_.lotLocation)
+
+  def parkVehicle(vehicle: Vehicle): Repository[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId] => Try[LotLocation] = {
+    repo => parkingService.parkVehicle(vehicle)(repo).map(_.lotLocation)
+  }
+
+  def takeAwayVehicle(vehicleId: VehicleId): Repository[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId] => Try[LotLocation] = {
+    repo => parkingService.takeAwayVehicle(vehicleId)(repo).map(_.lotLocation)
   }
 
 

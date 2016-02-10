@@ -1,30 +1,37 @@
 package org.garage.guru.domain
 
 import scala.util.Try
-
+import scala.language.implicitConversions
 
 trait ParkingService[FreeLot, TakenLot, Vehicle, VehicleId] {
 
-  def findFreeLot(vehicle: Vehicle) : Try[FreeLot]
 
-  def findParkedVehicle(vehicleId: VehicleId) : Try[TakenLot]
+  def findFreeLot(vehicle: Vehicle): Repository[FreeLot, TakenLot, Vehicle, VehicleId] => Try[FreeLot] =
+    (repo) => repo.findFreeLot(vehicle)
 
-  def takeParkingLot(freeLot: FreeLot, vehicle: Vehicle): Try[TakenLot]
+  def findParkedVehicle(vehicleId: VehicleId): Repository[FreeLot, TakenLot, Vehicle, VehicleId] => Try[TakenLot] =
+    (repo) => repo.findTakenLot(vehicleId)
 
-  def cleanParkingLot(takenLot: TakenLot): Try[FreeLot]
+  def takeParkingLot(freeLot: FreeLot, vehicle: Vehicle): Repository[FreeLot, TakenLot, Vehicle, VehicleId] => Try[TakenLot]
 
-  def parkVehicle(vehicle: Vehicle) : Try[TakenLot] = {
-    for{
-        freeLot <- findFreeLot(vehicle)
-        takenLot <- takeParkingLot(freeLot, vehicle)
-    }yield (takenLot)
+  def cleanParkingLot(takenLot: TakenLot): Repository[FreeLot, TakenLot, Vehicle, VehicleId] => Try[FreeLot]
+
+  def parkVehicle(vehicle: Vehicle): Repository[FreeLot, TakenLot, Vehicle, VehicleId] => Try[TakenLot] = {
+    repo => {
+      for {
+        freeLot <- findFreeLot(vehicle)(repo)
+        takenLot <- takeParkingLot(freeLot, vehicle)(repo)
+      } yield (takenLot)
+    }
   }
 
-  def takeAwayVehicle(vehicleId: VehicleId) : Try[FreeLot] = {
-    for{
-         takenLot <- findParkedVehicle(vehicleId)
-         freeLot <- cleanParkingLot(takenLot)
-    }yield (freeLot)
+  def takeAwayVehicle(vehicleId: VehicleId): Repository[FreeLot, TakenLot, Vehicle, VehicleId] => Try[FreeLot] = {
+   repo => {
+     for {
+       takenLot <- findParkedVehicle(vehicleId)(repo)
+       freeLot <- cleanParkingLot(takenLot)(repo)
+     } yield (freeLot)
+   }
   }
 
 

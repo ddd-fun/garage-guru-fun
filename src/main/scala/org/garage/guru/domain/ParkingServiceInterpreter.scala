@@ -5,13 +5,9 @@ import scala.util.{Failure, Success, Try}
 
 trait ParkingServiceInterpreter extends ParkingService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId] {
 
-  val repo: Repository
 
-  override def findFreeLot(vehicle: Vehicle): Try[FreeParkingLot] = repo.findFreeLot(vehicle)
-
-  override def findParkedVehicle(vehicleId: VehicleId): Try[TakenParkingLot] = repo.findTakenLot(vehicleId)
-
-  override def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle): Try[TakenParkingLot] = {
+  override def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle):
+  Repository[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId] => Try[TakenParkingLot] = { repo =>
     if (freeLot.acceptedVehicles.isSatisfiedBy(vehicle)) {
       repo.save(new TakenParkingLot(freeLot.lotLocation, freeLot.acceptedVehicles, vehicle))
     } else {
@@ -19,8 +15,8 @@ trait ParkingServiceInterpreter extends ParkingService[FreeParkingLot, TakenPark
     }
   }
 
-  override def cleanParkingLot(takenLot: TakenParkingLot): Try[FreeParkingLot] = {
-    repo.save(FreeParkingLot(takenLot.lotLocation, takenLot.acceptedVehicles))
+  override def cleanParkingLot(takenLot: TakenParkingLot): Repository[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId] => Try[FreeParkingLot] = {
+    repo => repo.save(FreeParkingLot(takenLot.lotLocation, takenLot.acceptedVehicles))
   }
 
 
