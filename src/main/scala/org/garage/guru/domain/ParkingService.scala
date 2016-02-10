@@ -5,18 +5,19 @@ import scala.language.implicitConversions
 
 trait ParkingService[FreeLot, TakenLot, Vehicle, VehicleId] {
 
+  type Repo = Repository[FreeLot, TakenLot, Vehicle, VehicleId]
 
-  def findFreeLot(vehicle: Vehicle): Repository[FreeLot, TakenLot, Vehicle, VehicleId] => Try[FreeLot] =
+  def findFreeLot(vehicle: Vehicle): Repo => Try[FreeLot] =
     (repo) => repo.findFreeLot(vehicle)
 
-  def findParkedVehicle(vehicleId: VehicleId): Repository[FreeLot, TakenLot, Vehicle, VehicleId] => Try[TakenLot] =
+  def findParkedVehicle(vehicleId: VehicleId): Repo => Try[TakenLot] =
     (repo) => repo.findTakenLot(vehicleId)
 
-  def takeParkingLot(freeLot: FreeLot, vehicle: Vehicle): Repository[FreeLot, TakenLot, Vehicle, VehicleId] => Try[TakenLot]
+  def takeParkingLot(freeLot: FreeLot, vehicle: Vehicle): Repo => Try[TakenLot]
 
-  def cleanParkingLot(takenLot: TakenLot): Repository[FreeLot, TakenLot, Vehicle, VehicleId] => Try[FreeLot]
+  def cleanParkingLot(takenLot: TakenLot): Repo => Try[FreeLot]
 
-  def parkVehicle(vehicle: Vehicle): Repository[FreeLot, TakenLot, Vehicle, VehicleId] => Try[TakenLot] = {
+  def parkVehicle(vehicle: Vehicle): Repo => Try[TakenLot] = {
     repo => {
       for {
         freeLot <- findFreeLot(vehicle)(repo)
@@ -25,7 +26,7 @@ trait ParkingService[FreeLot, TakenLot, Vehicle, VehicleId] {
     }
   }
 
-  def takeAwayVehicle(vehicleId: VehicleId): Repository[FreeLot, TakenLot, Vehicle, VehicleId] => Try[FreeLot] = {
+  def takeAwayVehicle(vehicleId: VehicleId): Repo => Try[FreeLot] = {
    repo => {
      for {
        takenLot <- findParkedVehicle(vehicleId)(repo)
