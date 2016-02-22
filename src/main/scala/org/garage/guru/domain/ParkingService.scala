@@ -20,7 +20,7 @@ trait ParkingService[FreeLot, TakenLot, Vehicle, VehicleId] {
   def cleanParkingLot(takenLot: TakenLot): Reader[Repo, Try[FreeLot]]
 
 
-  def parkVehicle(vehicle: Vehicle): Repo => Try[TakenLot] = {
+  def parkVehicle(vehicle: Vehicle): Reader[Repo, Try[TakenLot]] = Reader {
     repo => {
       for {
         freeLot <- findFreeLot(vehicle)(repo)
@@ -29,7 +29,7 @@ trait ParkingService[FreeLot, TakenLot, Vehicle, VehicleId] {
     }
   }
 
-  def takeAwayVehicle(vehicleId: VehicleId): Repo => Try[FreeLot] = {
+  def takeAwayVehicle(vehicleId: VehicleId): Reader[Repo, Try[FreeLot]] = Reader {
    repo => {
      for {
        takenLot <- findParkedVehicle(vehicleId)(repo)
