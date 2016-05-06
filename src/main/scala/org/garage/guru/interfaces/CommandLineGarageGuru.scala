@@ -21,18 +21,18 @@ object CommandLineGarageGuru  {
 
         case Some(List("exit")) => scala.util.control.Breaks.break();
 
-        case Some(List("free")) => println( ParkingAppService.freeLots()(Repository) );
+        case Some(List("free")) => println( ParkingAppService.freeLots(Repository) );
 
         case Some(List("park", t, v)) =>  Vehicle(t,v) match {
-               case Some(v) => println( ParkingAppService.parkVehicle(v)(Repository) )
+               case Some(v) => println( ParkingAppService.parkVehicle(v)(ParkingService)(Repository) )
                case _=> println("unknown command "+ln) }
 
         case Some(List("clean", v)) => Vehicle.id(v) match {
-               case Some(v) => println( ParkingAppService.takeAwayVehicle(v)(Repository) )
+               case Some(v) => println( ParkingAppService.takeAwayVehicle(v)(ParkingService)(Repository) )
                case _=> println("unknown command "+ln) }
 
         case Some(List("find", v)) => Vehicle.id(v) match {
-          case Some(v) => println( ParkingAppService.findParkedVehicle(v)(Repository) )
+          case Some(v) => println( ParkingAppService.findParkedVehicle(v)(ParkingService)(Repository) )
           case _=> println("unknown command "+ln) }
 
         case _=> println("unknown command "+ln)
@@ -42,9 +42,7 @@ object CommandLineGarageGuru  {
   }
 
 
-  object ParkingAppService extends ParkingAppService{
-    override val parkingService = ParkingService
-  }
+  object ParkingAppService extends ParkingAppService
 
   object ParkingService extends ParkingServiceInterpreter
 
