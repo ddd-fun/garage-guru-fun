@@ -4,10 +4,12 @@ package org.garage.guru.application
 import org.garage.guru.domain._
 
 import scala.util.Try
-import scalaz.{KleisliFunctions, KleisliInstances, ReaderT, Bind}
+import scalaz.{KleisliFunctions, KleisliInstances, ReaderT}
 
 
 trait ParkingAppService {
+
+  import Common._
 
   type DomainService = ParkingService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId]
 
@@ -37,10 +39,5 @@ trait ParkingAppService {
   }
 
 
-  implicit val TryBind = new Bind[Try] {
-    override def bind[A, B](fa: Try[A])(f: (A) => Try[B]): Try[B] = fa.flatMap(f)
-
-    override def map[A, B](fa: Try[A])(f: (A) => B): Try[B] = fa.map(f)
-  }
 
 }

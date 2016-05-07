@@ -5,30 +5,32 @@ import scalaz._
 
 trait ParkingService[FreeLot, TakenLot, Vehicle, VehicleId] {
 
+  import Common._
+
   type Repo = Repository[FreeLot, TakenLot, Vehicle, VehicleId]
 
-  type ReaderTry[A] = ReaderT[Try, Repo, A]
+  type RepoInj[A] = ReaderT[Try, Repo, A]
 
-  def findFreeLot(vehicle: Vehicle): ReaderTry[FreeLot] = ReaderTry{_.findFreeLot(vehicle)}
-
-
-  def findParkedVehicle(vehicleId: VehicleId): ReaderTry[TakenLot] = ReaderTry{_.findTakenLot(vehicleId)}
+  def findFreeLot(vehicle: Vehicle): RepoInj[FreeLot] = ReaderTry{_.findFreeLot(vehicle)}
 
 
-  def takeParkingLot(freeLot: FreeLot, vehicle: Vehicle): ReaderTry[TakenLot]
+  def findParkedVehicle(vehicleId: VehicleId): RepoInj[TakenLot] = ReaderTry{_.findTakenLot(vehicleId)}
 
 
-  def cleanParkingLot(takenLot: TakenLot): ReaderTry[FreeLot]
+  def takeParkingLot(freeLot: FreeLot, vehicle: Vehicle): RepoInj[TakenLot]
 
 
-  def parkVehicle(vehicle: Vehicle): ReaderTry[TakenLot] = {
+  def cleanParkingLot(takenLot: TakenLot): RepoInj[FreeLot]
+
+
+  def parkVehicle(vehicle: Vehicle): RepoInj[TakenLot] = {
     for {
         freeLot <- findFreeLot(vehicle)
         takenLot <- takeParkingLot(freeLot, vehicle)
     } yield (takenLot)
   }
 
-  def takeAwayVehicle(vehicleId: VehicleId): ReaderTry[FreeLot] = {
+  def takeAwayVehicle(vehicleId: VehicleId): RepoInj[FreeLot] = {
      for {
          takenLot <- findParkedVehicle(vehicleId)
          freeLot <- cleanParkingLot(takenLot)
@@ -36,14 +38,8 @@ trait ParkingService[FreeLot, TakenLot, Vehicle, VehicleId] {
   }
 
   object ReaderTry extends KleisliInstances with KleisliFunctions {
-    def apply[A](f: Repo => Try[A]): ReaderTry[A] = kleisli(f)
+    def apply[A](f: Repo => Try[A]): RepoInj[A] = kleisli(f)
   }
 
-
-  implicit val TryBind = new Bind[Try] {
-    override def bind[A, B](fa: Try[A])(f: (A) => Try[B]): Try[B] = fa.flatMap(f)
-
-    override def map[A, B](fa: Try[A])(f: (A) => B): Try[B] = fa.map(f)
-  }
 
 }
