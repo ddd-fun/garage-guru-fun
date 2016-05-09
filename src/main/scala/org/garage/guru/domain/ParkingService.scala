@@ -5,16 +5,16 @@ import scalaz._
 
 trait ParkingService[FreeLot, TakenLot, Vehicle, VehicleId] {
 
-  import Common._
+  import domain.tryBind
 
   type Repo = Repository[FreeLot, TakenLot, Vehicle, VehicleId]
 
   type RepoInj[A] = ReaderT[Try, Repo, A]
 
-  def findFreeLot(vehicle: Vehicle): RepoInj[FreeLot] = ReaderTry{_.findFreeLot(vehicle)}
+  def findFreeLot(vehicle: Vehicle): RepoInj[FreeLot] = RepoInj{_.findFreeLot(vehicle)}
 
 
-  def findParkedVehicle(vehicleId: VehicleId): RepoInj[TakenLot] = ReaderTry{_.findTakenLot(vehicleId)}
+  def findParkedVehicle(vehicleId: VehicleId): RepoInj[TakenLot] = RepoInj{_.findTakenLot(vehicleId)}
 
 
   def takeParkingLot(freeLot: FreeLot, vehicle: Vehicle): RepoInj[TakenLot]
@@ -37,7 +37,7 @@ trait ParkingService[FreeLot, TakenLot, Vehicle, VehicleId] {
      } yield (freeLot)
   }
 
-  object ReaderTry extends KleisliInstances with KleisliFunctions {
+  object RepoInj extends KleisliInstances with KleisliFunctions {
     def apply[A](f: Repo => Try[A]): RepoInj[A] = kleisli(f)
   }
 
