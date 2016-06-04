@@ -3,24 +3,32 @@ package org.garage.guru.application
 
 import org.garage.guru.domain._
 
+import scala.util.Try
+import scalaz.Free
+
 
 trait ParkingAppService {
 
-  import domain._
+//  import domain._
+//
+//  def findParkedVehicle(vehicleId: VehicleId) : DomainServiceInj[LotLocation] = {
+//     DomainServiceInj{_.findParkedVehicle(vehicleId).map(_.lotLocation)}
+//  }
 
-  def findParkedVehicle(vehicleId: VehicleId) : DomainServiceInj[LotLocation] = {
-     DomainServiceInj{_.findParkedVehicle(vehicleId).map(_.lotLocation)}
-  }
+  def freeLots : Free[RepoAction, FreeParkingLots]
 
-  def freeLots(repo: Repo) = repo.freeLots()
-
-  def parkVehicle(vehicle: Vehicle): DomainServiceInj[LotLocation] = {
-     DomainServiceInj{_.parkVehicle(vehicle).map(_.lotLocation)}
-  }
-
-  def takeAwayVehicle(vehicleId: VehicleId) : DomainServiceInj[LotLocation]= {
-    DomainServiceInj{_.takeAwayVehicle(vehicleId).map(_.lotLocation)}
-  }
+//  def parkVehicle(vehicle: Vehicle): DomainServiceInj[LotLocation] = {
+//     DomainServiceInj{_.parkVehicle(vehicle).map(_.lotLocation)}
+//  }
+//
+//  def takeAwayVehicle(vehicleId: VehicleId) : DomainServiceInj[LotLocation]= {
+//    DomainServiceInj{_.takeAwayVehicle(vehicleId).map(_.lotLocation)}
+//  }
 
 
+
+}
+
+object ParkingAppService extends ParkingAppService with Repository[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId]{
+   override def freeLots(): Free[RepoAction, FreeParkingLots] = freeLots();
 }

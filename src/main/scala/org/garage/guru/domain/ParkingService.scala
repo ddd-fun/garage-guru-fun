@@ -1,45 +1,36 @@
 package org.garage.guru.domain
 
-import scala.util.Try
+import scala.util
+import scala.util._
 import scalaz._
 
-trait ParkingService[FreeLot, TakenLot, Vehicle, VehicleId] {
+trait ParkingService[FreeLot, TakenLot, Vehicle, VehicleId]  {
 
-  import domain.tryBind
+//  def findFreeLot(vehicle: Vehicle): Free[RepoAction, Try[FreeLot]]
+//
+//  def findParkedVehicle(vehicleId: VehicleId): Free[RepoAction,Try[TakenLot]]
+//
+//  def takeParkingLot(freeLot: FreeLot, vehicle: Vehicle): Free[RepoAction,Try[TakenLot]]
+//
+//  def cleanParkingLot(takenLot: TakenLot): Free[RepoAction, Try[FreeLot]]
+//
+//  def parkVehicle(vehicle: Vehicle): Free[RepoAction, Try[TakenLot]] = {
+////    for {
+////        freeLot <- findFreeLot(vehicle)
+////        takenLot <- takeParkingLot(freeLot, vehicle)
+////    } yield (takenLot)
+//    findFreeLot(vehicle).flatMap( (t:Try[FreeLot]) =>  Free.pure[RepoAction,Try](Failure(new RuntimeException(""))))
+//  }
+//
+//  def takeAwayVehicle(vehicleId: VehicleId): Free[RepoAction, FreeLot] = {
+//     for {
+//         takenLot <- findParkedVehicle(vehicleId)
+//         freeLot <- cleanParkingLot(takenLot)
+//     } yield (freeLot)
+//  }
 
-  type Repo = Repository[FreeLot, TakenLot, Vehicle, VehicleId]
-
-  type RepoInj[A] = ReaderT[Try, Repo, A]
-
-  def findFreeLot(vehicle: Vehicle): RepoInj[FreeLot] = RepoInj{_.findFreeLot(vehicle)}
-
-
-  def findParkedVehicle(vehicleId: VehicleId): RepoInj[TakenLot] = RepoInj{_.findTakenLot(vehicleId)}
-
-
-  def takeParkingLot(freeLot: FreeLot, vehicle: Vehicle): RepoInj[TakenLot]
-
-
-  def cleanParkingLot(takenLot: TakenLot): RepoInj[FreeLot]
-
-
-  def parkVehicle(vehicle: Vehicle): RepoInj[TakenLot] = {
-    for {
-        freeLot <- findFreeLot(vehicle)
-        takenLot <- takeParkingLot(freeLot, vehicle)
-    } yield (takenLot)
-  }
-
-  def takeAwayVehicle(vehicleId: VehicleId): RepoInj[FreeLot] = {
-     for {
-         takenLot <- findParkedVehicle(vehicleId)
-         freeLot <- cleanParkingLot(takenLot)
-     } yield (freeLot)
-  }
-
-  object RepoInj extends KleisliInstances with KleisliFunctions {
-    def apply[A](f: Repo => Try[A]): RepoInj[A] = kleisli(f)
-  }
 
 
 }
+
+
