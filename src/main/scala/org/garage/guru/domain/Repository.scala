@@ -9,13 +9,13 @@ sealed trait RepoAction[+A]
 //case class FindFreeLot[V,+L](vehicle:V) extends RepoAction[L]
 //case class FindTakenLot[Id,+L](vehId:Id) extends RepoAction[L]
 //case class SaveLot[+L](a:L) extends RepoAction[L]
-case class QueryFreeLots[+A](no:String, onResult: FreeParkingLots => A) extends RepoAction[A]
+case class QueryFreeLots[+A](onResult: FreeParkingLots => A) extends RepoAction[A]
 
 
 object RepoAction {
   implicit val functor: Functor[RepoAction] = new Functor[RepoAction] {
     def map[A,B](action: RepoAction[A])(f: A => B): RepoAction[B] = action match {
-      case QueryFreeLots(no, onResult) => QueryFreeLots(no, onResult andThen f)
+      case QueryFreeLots(onResult) => QueryFreeLots(onResult andThen f)
     }
   }
 }
@@ -29,7 +29,7 @@ trait Repository[FreeLot, TakenLot, Vehicle, VehicleId] {
 //
 //   def save[L <: ParkingLot](parkingLot: L): Free[RepoAction,  Try[L]] = liftF(SaveLot(parkingLot)).map(Try(_))
 
-   def freeLots(): Free[RepoAction, FreeParkingLots] = liftF(QueryFreeLots("", identity))
+   def freeLots(): Free[RepoAction, FreeParkingLots] = liftF(QueryFreeLots(identity))
 
  }
 
