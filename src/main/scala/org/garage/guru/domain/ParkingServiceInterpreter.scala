@@ -3,7 +3,7 @@ package org.garage.guru.domain
 import scala.util.{Failure, Success, Try}
 
 
-trait ParkingServiceInterpreter extends ParkingService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId] {
+trait ParkingServiceInterpreter extends ParkingService {
 
 
 //  override def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle) = {

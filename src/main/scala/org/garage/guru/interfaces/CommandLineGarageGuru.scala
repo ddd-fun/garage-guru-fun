@@ -23,10 +23,10 @@ object CommandLineGarageGuru  {
 
         case Some(List("free")) => println( Repository.freeLots().foldMap(RepositoryInterpreter) );
 
-//        case Some(List("park", t, v)) =>  Vehicle(t,v) match {
-//               case Some(v) => println( ParkingAppService.parkVehicle(v)(ParkingService)(Repository) )
-//               case _=> println("unknown command "+ln) }
-//
+        case Some(List("park", t, v)) =>  Vehicle(t,v) match {
+               case Some(v) => println( ParkingAppService.parkVehicle(v).foldMap(RepositoryInterpreter) )
+               case _=> println("unknown command "+ln) }
+
 //        case Some(List("clean", v)) => Vehicle.id(v) match {
 //               case Some(v) => println( ParkingAppService.takeAwayVehicle(v)(ParkingService)(Repository) )
 //               case _=> println("unknown command "+ln) }
@@ -41,7 +41,7 @@ object CommandLineGarageGuru  {
 
   }
 
-  //object ParkingAppService extends ParkingAppService
+
 
  // object ParkingService extends ParkingServiceInterpreter
 

@@ -6,7 +6,7 @@ import org.garage.guru.domain._
 import scala.util.{Failure, Success, Try}
 
 
-class InMemoryRepository extends Repository[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId]{
+class InMemoryRepository extends Repository{
 
 //  val repo = scala.collection.mutable.Map.empty[LotLocation, ParkingLot]
 //
