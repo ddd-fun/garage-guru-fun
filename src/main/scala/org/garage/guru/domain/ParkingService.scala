@@ -6,16 +6,19 @@ import scalaz._
 
 trait ParkingService extends Repository{
 
-//  def findFreeLot(vehicle: Vehicle): Free[RepoAction, Try[FreeLot]]
-//
-//  def findParkedVehicle(vehicleId: VehicleId): Free[RepoAction,Try[TakenLot]]
-//
+
+  def findParkedVehicle(vehicleId: VehicleId): Free[RepoAction, TakenParkingLot] = {
+    findTakenLot(vehicleId)
+  }
+
   def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle): Free[RepoAction, ParkingLot] = {
       save(new TakenParkingLot(freeLot.lotLocation, freeLot.acceptedVehicles, vehicle))
   }
 
-//
-//  def cleanParkingLot(takenLot: TakenLot): Free[RepoAction, Try[FreeLot]]
+
+  def cleanParkingLot(takenLot: TakenParkingLot): Free[RepoAction, ParkingLot] = {
+    save(new FreeParkingLot(takenLot.lotLocation, takenLot.acceptedVehicles))
+  }
 
 
   def parkVehicle(vehicle: Vehicle): Free[RepoAction, ParkingLot] = {
@@ -26,12 +29,12 @@ trait ParkingService extends Repository{
   }
 
 
-//  def takeAwayVehicle(vehicleId: VehicleId): Free[RepoAction, FreeLot] = {
-//     for {
-//         takenLot <- findParkedVehicle(vehicleId)
-//         freeLot <- cleanParkingLot(takenLot)
-//     } yield (freeLot)
-//  }
+  def takeAwayVehicle(vehicleId: VehicleId): Free[RepoAction, ParkingLot] = {
+     for {
+         takenLot <- findParkedVehicle(vehicleId)
+         freeLot <- cleanParkingLot(takenLot)
+     } yield (freeLot)
+  }
 
 
 

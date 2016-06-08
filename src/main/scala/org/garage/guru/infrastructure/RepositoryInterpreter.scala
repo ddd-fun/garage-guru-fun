@@ -17,16 +17,22 @@ object RepositoryInterpreter  extends (RepoAction ~> Id.Id) {
    }
 
 
-
-  override def apply[A](fa: RepoAction[A]): Id[A] = {
+   override def apply[A](fa: RepoAction[A]): Id[A] = {
      fa match {
        case QueryFreeLots(onResult) => onResult(freeLots())
        case FindFreeLot(v:Vehicle, onResult) => onResult(findFreeLot(v))
        case SaveLot(lot, onResult) => onResult(save(lot))
+       case FindTakenLot(vId:VehicleId, onFound) => onFound(findTakenLot(vId))
      }
 
-  }
+   }
 
+
+   def findTakenLot(vehicleId: VehicleId): TakenParkingLot = {
+      val takenLotByVehicle = (lot: ParkingLot) => lot.isInstanceOf[TakenParkingLot] && lot.asInstanceOf[TakenParkingLot].vehicle.vehicleId == vehicleId
+      repo.values.find(takenLotByVehicle)
+        .map(fl => fl.asInstanceOf[TakenParkingLot]).get
+   }
 
    def save[L <: ParkingLot](parkingLot: L): L = {
       repo.+=(parkingLot.lotLocation -> parkingLot)
