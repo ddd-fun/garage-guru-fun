@@ -2,7 +2,7 @@ package org.garage.guru.domain
 
 import scala.util
 import scala.util._
-import scalaz._
+import scalaz.{Failure => _}
 
 trait ParkingService extends Repository{
 
@@ -11,8 +11,16 @@ trait ParkingService extends Repository{
     findTakenLot(vehicleId)
   }
 
-  def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle): TryRepoAction[ParkingLot] = {
-      save(new TakenParkingLot(freeLot.lotLocation, freeLot.acceptedVehicles, vehicle))
+//  def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle): TryRepoAction[ParkingLot] = {
+//      save(new TakenParkingLot(freeLot.lotLocation, freeLot.acceptedVehicles, vehicle))
+//  }
+
+   def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle) : TryRepoAction[ParkingLot] = {
+      if (freeLot.acceptedVehicles.isSatisfiedBy(vehicle)) {
+        save(new TakenParkingLot(freeLot.lotLocation, freeLot.acceptedVehicles, vehicle))
+      } else {
+         TryRepoAction.failure( Failure(new Exception(s"vehicle $vehicle doesn't satisfy accepted vehicle specification of $freeLot")) )
+      }
   }
 
 

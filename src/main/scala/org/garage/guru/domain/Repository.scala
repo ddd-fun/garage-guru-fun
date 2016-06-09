@@ -65,7 +65,7 @@ object TryRepoAction extends Monad[TryRepoAction]{
 
   override def point[A](a: => A): TryRepoAction[A] = TryRepoAction(Free.point[RepoAction, Try[A]](Success(a)))
 
-
+  def failure[A](failure: Failure[A]) : TryRepoAction[A] = new TryRepoAction(Free.point[RepoAction, Try[A]](failure.asInstanceOf[Try[A]]) )
 
 }
 
