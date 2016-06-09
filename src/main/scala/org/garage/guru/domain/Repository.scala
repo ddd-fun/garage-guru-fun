@@ -1,15 +1,16 @@
 package org.garage.guru.domain
 
 
-import scala.util.Try
-import scalaz.{Functor, Free}
+
+import scala.util.{Failure, Success, Try}
+import scalaz.{OptionT, Monad, Functor, Free}
 import scalaz.Free._
 
 sealed trait RepoAction[+A]
-case class FindFreeLot[V,+A](vehicle:V, onFound: FreeParkingLot => A) extends RepoAction[A]
-case class FindTakenLot[Id,+A](vehId:Id, onFound: TakenParkingLot => A) extends RepoAction[A]
-case class SaveLot[+A](lot:ParkingLot, onResult:ParkingLot => A) extends RepoAction[A]
-case class QueryFreeLots[+A](onResult: FreeParkingLots => A) extends RepoAction[A]
+case class FindFreeLot[V,+A](vehicle:V, onFound: Try[FreeParkingLot] => A) extends RepoAction[A]
+case class FindTakenLot[Id,+A](vehId:Id, onFound: Try[TakenParkingLot] => A) extends RepoAction[A]
+case class SaveLot[+A](lot:ParkingLot, onResult: Try[ParkingLot] => A) extends RepoAction[A]
+case class QueryFreeLots[+A](onResult: Try[FreeParkingLots] => A) extends RepoAction[A]
 
 
 object RepoAction {
@@ -26,14 +27,48 @@ object RepoAction {
 
 trait Repository {
 
-   def findFreeLot(vehicle: Vehicle): Free[RepoAction,  FreeParkingLot] = liftF(FindFreeLot[Vehicle,FreeParkingLot](vehicle, identity))
+   def findFreeLot(vehicle: Vehicle): TryRepoAction[FreeParkingLot] =
+     new TryRepoAction(liftF(FindFreeLot[Vehicle,Try[FreeParkingLot]](vehicle, identity) ))
 
-   def findTakenLot(vehicleId: VehicleId): Free[RepoAction,  TakenParkingLot] = liftF(FindTakenLot(vehicleId, identity))
+   def findTakenLot(vehicleId: VehicleId): TryRepoAction[TakenParkingLot] = {
+     new TryRepoAction(liftF(FindTakenLot(vehicleId, identity)))
+   }
 
-   def save(parkingLot: ParkingLot): Free[RepoAction, ParkingLot] = liftF(SaveLot[ParkingLot](parkingLot, identity))
+   def save(parkingLot: ParkingLot): TryRepoAction[ParkingLot] = {
+     new TryRepoAction[ParkingLot](liftF(SaveLot[Try[ParkingLot]](parkingLot, identity)))
+   }
 
-   def freeLots(): Free[RepoAction, FreeParkingLots] = liftF(QueryFreeLots(identity):RepoAction[FreeParkingLots])
+   def freeLots(): TryRepoAction[FreeParkingLots] =
+     new TryRepoAction(liftF(QueryFreeLots(identity)))
 
+  OptionT
  }
+
+
+
+  case class TryRepoAction[A](run: Free[RepoAction, Try[A]]) {
+    def flatMap[B](f: (A) => TryRepoAction[B]) : TryRepoAction[B] = {
+      TryRepoAction.bind(this)(f)
+    }
+    def map[B](f: A => B) : TryRepoAction[B] = new TryRepoAction[B]( run.map( _ map f ))
+  }
+
+
+object TryRepoAction extends Monad[TryRepoAction]{
+  override def bind[A, B](fa: TryRepoAction[A])(f: (A) => TryRepoAction[B]): TryRepoAction[B] = {
+    val nextFree = fa.run.flatMap(t => t  match {
+      case Success(a) => f(a).run;
+      case fail@Failure(ex) => { Free.point[RepoAction, Try[B]](fail.asInstanceOf[Try[B]]) }
+    } )
+    TryRepoAction(nextFree)
+  }
+
+  override def point[A](a: => A): TryRepoAction[A] = TryRepoAction(Free.point[RepoAction, Try[A]](Success(a)))
+
+
+
+}
+
+
 
 object Repository extends Repository

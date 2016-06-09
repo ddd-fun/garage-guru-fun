@@ -15,7 +15,7 @@ trait ParkingAppService {
 //     DomainServiceInj{_.findParkedVehicle(vehicleId).map(_.lotLocation)}
 //  }
 
-  def freeLots : Free[RepoAction, FreeParkingLots]
+//  def freeLots : Free[RepoAction, FreeParkingLots]
 
 //  def parkVehicle(vehicle: Vehicle): LotLocation = {
 //     DomainServiceInj{_.parkVehicle(vehicle).map(_.lotLocation)}
@@ -29,7 +29,4 @@ trait ParkingAppService {
 
 }
 
-object ParkingAppService extends ParkingAppService with Repository with ParkingService{
-   override def freeLots(): Free[RepoAction, FreeParkingLots] = freeLots();
-
-}
+object ParkingAppService extends ParkingAppService with Repository with ParkingService

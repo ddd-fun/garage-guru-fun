@@ -7,21 +7,21 @@ import scalaz._
 trait ParkingService extends Repository{
 
 
-  def findParkedVehicle(vehicleId: VehicleId): Free[RepoAction, TakenParkingLot] = {
+  def findParkedVehicle(vehicleId: VehicleId): TryRepoAction[TakenParkingLot] = {
     findTakenLot(vehicleId)
   }
 
-  def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle): Free[RepoAction, ParkingLot] = {
+  def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle): TryRepoAction[ParkingLot] = {
       save(new TakenParkingLot(freeLot.lotLocation, freeLot.acceptedVehicles, vehicle))
   }
 
 
-  def cleanParkingLot(takenLot: TakenParkingLot): Free[RepoAction, ParkingLot] = {
+  def cleanParkingLot(takenLot: TakenParkingLot): TryRepoAction[ParkingLot] = {
     save(new FreeParkingLot(takenLot.lotLocation, takenLot.acceptedVehicles))
   }
 
 
-  def parkVehicle(vehicle: Vehicle): Free[RepoAction, ParkingLot] = {
+  def parkVehicle(vehicle: Vehicle): TryRepoAction[ParkingLot] = {
     for {
         freeLot <- findFreeLot(vehicle)
         takenLot <- takeParkingLot(freeLot, vehicle)
@@ -29,7 +29,7 @@ trait ParkingService extends Repository{
   }
 
 
-  def takeAwayVehicle(vehicleId: VehicleId): Free[RepoAction, ParkingLot] = {
+  def takeAwayVehicle(vehicleId: VehicleId): TryRepoAction[ParkingLot] = {
      for {
          takenLot <- findParkedVehicle(vehicleId)
          freeLot <- cleanParkingLot(takenLot)
