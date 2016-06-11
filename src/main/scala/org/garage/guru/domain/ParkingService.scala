@@ -10,32 +10,30 @@ trait ParkingService extends Repository{
     findTakenLot(vehicleId)
   }
 
-   def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle) : TryRepoAction[ParkingLot] = {
-      if (freeLot.acceptedVehicles.isSatisfiedBy(vehicle)) {
-        save(new TakenParkingLot(freeLot.lotLocation, freeLot.acceptedVehicles, vehicle))
-      } else {
-         TryRepoAction.failure( Failure(new Exception(s"vehicle $vehicle doesn't satisfy accepted vehicle specification of $freeLot")) )
-      }
+  def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle) : TryRepoAction[TakenParkingLot] = {
+    TryRepoAction.pointF(ParkingLot.take(freeLot, vehicle))
   }
 
 
-  def cleanParkingLot(takenLot: TakenParkingLot): TryRepoAction[ParkingLot] = {
-    save(new FreeParkingLot(takenLot.lotLocation, takenLot.acceptedVehicles))
+  def cleanParkingLot(id: VehicleId, takenLot: TakenParkingLot): TryRepoAction[FreeParkingLot] = {
+    TryRepoAction.pointF(ParkingLot.clean(id, takenLot))
   }
 
 
-  def parkVehicle(vehicle: Vehicle): TryRepoAction[ParkingLot] = {
+  def parkVehicle(vehicle: Vehicle): TryRepoAction[TakenParkingLot] = {
     for {
         freeLot <- findFreeLot(vehicle)
         takenLot <- takeParkingLot(freeLot, vehicle)
+        _ <- save(takenLot)
     } yield (takenLot)
   }
 
 
-  def takeAwayVehicle(vehicleId: VehicleId): TryRepoAction[ParkingLot] = {
+  def takeAwayVehicle(vehicleId: VehicleId): TryRepoAction[FreeParkingLot] = {
      for {
          takenLot <- findParkedVehicle(vehicleId)
-         freeLot <- cleanParkingLot(takenLot)
+         freeLot <- cleanParkingLot(vehicleId, takenLot)
+         _ <- save(freeLot)
      } yield (freeLot)
   }
 

@@ -66,6 +66,8 @@ import scalaz.Free._
 
     def failure[A](failure: Failure[A]) : TryRepoAction[A] = new TryRepoAction(Free.point[RepoAction, Try[A]](failure.asInstanceOf[Try[A]]) )
 
+    def pointF[A](t: Try[A]) : TryRepoAction[A] = TryRepoAction(Free.point[RepoAction, Try[A]](t) )
+
   }
 
 
