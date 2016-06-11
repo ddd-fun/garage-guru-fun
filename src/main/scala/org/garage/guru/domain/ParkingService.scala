@@ -15,7 +15,6 @@ trait ParkingService[FreeLot, TakenLot, Id, Vehicle] {
     for {
         freeLot <- findFreeLot(vehicle)
         takenLot <- takeParkingLot(freeLot, vehicle)
-        //_ <- save(takenLot)
     } yield (takenLot)
   }
 
@@ -23,7 +22,6 @@ trait ParkingService[FreeLot, TakenLot, Id, Vehicle] {
      for {
          takenLot <- findTakenLot(vehicleId)
          freeLot <- cleanParkingLot(vehicleId, takenLot)
-        // _ <- save(freeLot)
      } yield (freeLot)
   }
 
