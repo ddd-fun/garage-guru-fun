@@ -5,22 +5,15 @@ import scalaz.{Failure => _}
 
 trait ParkingService extends Repository{
 
+  type ParkingAction[A] = TryRepoAction[A]
 
-  def findParkedVehicle(vehicleId: VehicleId): TryRepoAction[TakenParkingLot] = {
-    findTakenLot(vehicleId)
-  }
-
-  def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle) : TryRepoAction[TakenParkingLot] = {
-    TryRepoAction.pointF(ParkingLot.take(freeLot, vehicle))
-  }
+  def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle) : ParkingAction[TakenParkingLot]
 
 
-  def cleanParkingLot(id: VehicleId, takenLot: TakenParkingLot): TryRepoAction[FreeParkingLot] = {
-    TryRepoAction.pointF(ParkingLot.clean(id, takenLot))
-  }
+  def cleanParkingLot(id: VehicleId, takenLot: TakenParkingLot): ParkingAction[FreeParkingLot]
 
 
-  def parkVehicle(vehicle: Vehicle): TryRepoAction[TakenParkingLot] = {
+  def parkVehicle(vehicle: Vehicle): ParkingAction[TakenParkingLot] = {
     for {
         freeLot <- findFreeLot(vehicle)
         takenLot <- takeParkingLot(freeLot, vehicle)
@@ -29,14 +22,12 @@ trait ParkingService extends Repository{
   }
 
 
-  def takeAwayVehicle(vehicleId: VehicleId): TryRepoAction[FreeParkingLot] = {
+  def takeAwayVehicle(vehicleId: VehicleId): ParkingAction[FreeParkingLot] = {
      for {
-         takenLot <- findParkedVehicle(vehicleId)
+         takenLot <- findTakenLot(vehicleId)
          freeLot <- cleanParkingLot(vehicleId, takenLot)
          _ <- save(freeLot)
      } yield (freeLot)
   }
 
 }
-
-object ParkingService extends ParkingService
