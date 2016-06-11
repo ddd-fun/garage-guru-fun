@@ -42,10 +42,6 @@ object CommandLineGarageGuru  {
   }
 
 
-
- // object ParkingService extends ParkingServiceInterpreter
-
-
   val welcomeMsg = StringBuilder.newBuilder
          .++=("Welcome to Garage Guru command line. Please, enter a command:")
            .++=("\n")

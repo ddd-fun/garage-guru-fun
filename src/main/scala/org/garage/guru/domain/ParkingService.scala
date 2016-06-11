@@ -39,8 +39,6 @@ trait ParkingService extends Repository{
      } yield (freeLot)
   }
 
-
-
 }
 
-
+object ParkingService extends ParkingService
