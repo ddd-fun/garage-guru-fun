@@ -9,7 +9,7 @@ import scalaz.Free._
   sealed trait RepoAction[+A]
   case class FindFreeLot[V,+A](vehicle:V, onFound: Try[FreeParkingLot] => A) extends RepoAction[A]
   case class FindTakenLot[Id,+A](vehId:Id, onFound: Try[TakenParkingLot] => A) extends RepoAction[A]
-  case class SaveLot[+A](lot:ParkingLot, onResult: Try[ParkingLot] => A) extends RepoAction[A]
+  case class SaveLot[+A, L <: ParkingLot](lot:L, onResult: Try[L] => A) extends RepoAction[A]
   case class QueryFreeLots[+A](onResult: Try[FreeParkingLots] => A) extends RepoAction[A]
 
 
@@ -34,8 +34,8 @@ import scalaz.Free._
        TryRepoAction(liftF(FindTakenLot(vehicleId, identity)))
      }
 
-     def save(parkingLot: ParkingLot): TryRepoAction[ParkingLot] = {
-       TryRepoAction[ParkingLot](liftF(SaveLot[Try[ParkingLot]](parkingLot, identity)))
+     def save[L <: ParkingLot](parkingLot: L): TryRepoAction[L] = {
+       TryRepoAction(liftF(SaveLot[Try[L],L](parkingLot, identity)))
      }
 
      def freeLots(): TryRepoAction[FreeParkingLots] =

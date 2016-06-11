@@ -3,15 +3,20 @@ package org.garage.guru.domain
 import scala.util.{Failure, Success, Try}
 
 
-class ParkingServiceInterpreter extends ParkingService {
+class ParkingServiceInterpreter extends ParkingService[FreeParkingLot, TakenParkingLot, VehicleId, Vehicle] with Repository{
 
   def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle) : ParkingAction[TakenParkingLot] = {
-    TryRepoAction.pointF(ParkingLot.take(freeLot, vehicle))
+    for{
+       takenLot <- TryRepoAction.pointF(ParkingLot.take(freeLot, vehicle))
+       stored  <- save(takenLot)
+    } yield (stored)
   }
 
-
   def cleanParkingLot(id: VehicleId, takenLot: TakenParkingLot): ParkingAction[FreeParkingLot] = {
-    TryRepoAction.pointF(ParkingLot.clean(id, takenLot))
+    for{
+      freeLot <- TryRepoAction.pointF(ParkingLot.clean(id, takenLot))
+      stored  <- save(freeLot)
+    } yield (stored)
   }
 
 }

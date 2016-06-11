@@ -1,32 +1,29 @@
 package org.garage.guru.domain
 
-import scala.util._
-import scalaz.{Failure => _}
-
-trait ParkingService extends Repository{
-
-  type ParkingAction[A] = TryRepoAction[A]
-
-  def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle) : ParkingAction[TakenParkingLot]
+trait ParkingService[FreeLot, TakenLot, Id, Vehicle] {
 
 
-  def cleanParkingLot(id: VehicleId, takenLot: TakenParkingLot): ParkingAction[FreeParkingLot]
+  def findFreeLot(vehicle: Vehicle) : ParkingAction[FreeLot]
 
+  def findTakenLot(vehicleId: Id): ParkingAction[TakenLot]
 
-  def parkVehicle(vehicle: Vehicle): ParkingAction[TakenParkingLot] = {
+  def takeParkingLot(freeLot: FreeLot, vehicle: Vehicle) : ParkingAction[TakenLot]
+
+  def cleanParkingLot(id: Id, takenLot: TakenLot): ParkingAction[FreeLot]
+
+  def parkVehicle(vehicle: Vehicle): ParkingAction[TakenLot] = {
     for {
         freeLot <- findFreeLot(vehicle)
         takenLot <- takeParkingLot(freeLot, vehicle)
-        _ <- save(takenLot)
+        //_ <- save(takenLot)
     } yield (takenLot)
   }
 
-
-  def takeAwayVehicle(vehicleId: VehicleId): ParkingAction[FreeParkingLot] = {
+  def takeAwayVehicle(vehicleId: Id): ParkingAction[FreeLot] = {
      for {
          takenLot <- findTakenLot(vehicleId)
          freeLot <- cleanParkingLot(vehicleId, takenLot)
-         _ <- save(freeLot)
+        // _ <- save(freeLot)
      } yield (freeLot)
   }
 
