@@ -4,6 +4,8 @@ import org.garage.guru.application.ParkingAppService
 import org.garage.guru.domain._
 import org.garage.guru.infrastructure.InMemoryRepository
 
+import scalaz.{Failure, Success}
+
 object CommandLineGarageGuru  {
 
   def main(args: Array[String]) {
@@ -16,31 +18,17 @@ object CommandLineGarageGuru  {
     println(welcomeMsg)
 
     for (ln <- io.Source.stdin.getLines){
-
-      "(\\w*)\\s*(\\w*)\\s*(\\w*)".r.findFirstMatchIn(ln).map(_.subgroups.filter(!_.isEmpty)) match {
-
-        case Some(List("exit")) => scala.util.control.Breaks.break();
-
-        case Some(List("free")) => println( ParkingAppService.freeLots(Repository) );
-
-        case Some(List("park", t, v)) =>  Vehicle(t,v) match {
-               case Some(v) => println( ParkingAppService.parkVehicle(v)(ParkingService)(Repository) )
-               case _=> println("unknown command "+ln) }
-
-        case Some(List("clean", v)) => Vehicle.id(v) match {
-               case Some(v) => println( ParkingAppService.takeAwayVehicle(v)(ParkingService)(Repository) )
-               case _=> println("unknown command "+ln) }
-
-        case Some(List("find", v)) => Vehicle.id(v) match {
-          case Some(v) => println( ParkingAppService.findParkedVehicle(v)(ParkingService)(Repository) )
-          case _=> println("unknown command "+ln) }
-
-        case _=> println("unknown command "+ln)
-      }
+      import Parser._
+      Parser.parseCommand(ln).fold(fail => println(fail), command => command match {
+        case Exit => scala.util.control.Breaks.break();
+        case Free => println(ParkingAppService.freeLots(Repository) )
+        case Park(v) => println(ParkingAppService.parkVehicle(v)(ParkingService)(Repository))
+        case Find(id) => println(ParkingAppService.findParkedVehicle(id)(ParkingService)(Repository))
+        case Clean(id) => println(ParkingAppService.takeAwayVehicle(id)(ParkingService)(Repository))
+      } )
     }
 
   }
-
 
   object ParkingAppService extends ParkingAppService
 
@@ -48,6 +36,38 @@ object CommandLineGarageGuru  {
 
   object Repository extends InMemoryRepository
 
+  object Parser{
+
+    import scalaz.Validation
+
+    trait Command
+    case object Exit extends Command
+    case object Free extends Command
+    case class Park(vehicle:Vehicle) extends Command
+    case class Clean(id:VehicleId) extends Command
+    case class Find(id:VehicleId) extends Command
+
+    def parseCommand(str: String):Validation[String, Command] = {
+      val exit = "(exit)".r
+      val park = "park\\s*(car|motorbike)\\s*(\\w*)".r
+      val free = "(free)".r
+      val clean = "clean\\s*(\\w*)".r
+      val find = "find\\s*(\\w*)".r
+      str.trim match {
+        case exit(_) => Success(Exit)
+        case free(_) => Success(Free)
+        case park(t, id) => Vehicle(t, id).fold[Validation[String, Command]](invalidVehicle(t,id))(v => Success(Park(v)))
+        case clean(id) => Vehicle.id(id).fold[Validation[String, Command]](invalidId(id))(vid => Success(Clean(vid)))
+        case find(id) => Vehicle.id(id).fold[Validation[String, Command]](invalidId(id))(vid => Success(Find(vid)))
+        case _ => Failure(s"'$str'  is unknown command ")
+      }
+    }
+
+    private def invalidId(str:String) = Failure(s"'$str' could not be parsed to vehicle id")
+
+    private def invalidVehicle(t:String, id:String) = Failure(s"'$t $id' could not be parsed to vehicle. Valid example: car A123")
+
+  }
 
   val welcomeMsg = StringBuilder.newBuilder
          .++=("Welcome to Garage Guru command line. Please, enter a command:")
