@@ -19,7 +19,7 @@ object CommandLineGarageGuru  {
 
     for (ln <- io.Source.stdin.getLines){
       import Parser._
-      Parser.parseCommand(ln).fold(fail => println(fail), command => command match {
+      Parser.parseCommand(ln).fold(fail => println(fail), _ match {
         case Exit => scala.util.control.Breaks.break();
         case Free => println(ParkingAppService.freeLots(Repository) )
         case Park(v) => println(ParkingAppService.parkVehicle(v)(ParkingService)(Repository))
