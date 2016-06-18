@@ -3,8 +3,11 @@ package org.garage.guru.interfaces
 import org.garage.guru.application.ParkingAppService
 import org.garage.guru.domain._
 import org.garage.guru.infrastructure.InMemoryRepository
+import org.garage.guru.interfaces.CommandLineGarageGuru.Parser.{Command, Exit}
 
-import scalaz.{Failure, Success}
+import scala.util.Try
+import scalaz.effect.IO
+import scalaz._
 
 object CommandLineGarageGuru  {
 
@@ -15,18 +18,60 @@ object CommandLineGarageGuru  {
     Repository.addFreeLot(FreeParkingLot(LotLocation("A", "2"), CarSpec))
     Repository.addFreeLot(FreeParkingLot(LotLocation("B", "1"), MotorbikeSpec))
 
-    println(welcomeMsg)
 
-    for (ln <- io.Source.stdin.getLines){
-      import Parser._
-      Parser.parseCommand(ln).fold(fail => println(fail), _ match {
-        case Exit => scala.util.control.Breaks.break();
-        case Free => println(ParkingAppService.freeLots(Repository) )
-        case Park(v) => println(ParkingAppService.parkVehicle(v)(ParkingService)(Repository))
-        case Find(id) => println(ParkingAppService.findParkedVehicle(id)(ParkingService)(Repository))
-        case Clean(id) => println(ParkingAppService.takeAwayVehicle(id)(ParkingService)(Repository))
-      } )
+
+    implicit val ioMonad = new Monad[IO] {
+      override def point[A](a: => A): IO[A] = IO(a)
+
+      override def bind[A, B](fa: IO[A])(f: (A) => IO[B]): IO[B] = fa.flatMap(f)
     }
+
+
+    implicit val show = new Show[Try[FreeParkingLots]] {
+      override def shows(a: Try[FreeParkingLots]) = a.toString
+    }
+
+    implicit val showLot = new Show[Try[LotLocation]] {
+      override def shows(a: Try[LotLocation]) = a.toString
+    }
+
+    import IO._
+    import scala.language.higherKinds
+    def doWhile[F[_], A](a: F[A])(f: A => F[Boolean])(implicit monad: Monad[F]): F[Unit] = {
+      monad.bind(monad.bind(a)(f(_)))(if(_) doWhile(a)(f) else monad.point(Unit))
+    }
+
+
+    def readCommand() = IO.readLn.map(Parser.parseCommand(_))
+
+    def handleCommand(c:Command) : IO[Boolean] = {
+      import Parser._
+      import ParkingAppService._
+      c match {
+        case Exit => IO{false};
+        case Free =>  IO.putLn( freeLots(Repository) ).map(_ => true)
+        case Park(v) => IO.putLn( parkVehicle(v)(ParkingService)(Repository) ).map(_ => true)
+        case Find(id) => IO.putLn( findParkedVehicle(id)(ParkingService)(Repository) ).map(_ => true)
+        case Clean(id) => IO.putLn( takeAwayVehicle(id)(ParkingService)(Repository) ).map(_ => true)
+      }
+    }
+
+
+    def when[A,B](when: Validation[String,A])(onSuccess: A => IO[B], onFailure: String => IO[B]) = {
+      when match  {
+        case Success(c) => onSuccess(c)
+        case Failure(m) => onFailure(m)  }
+    }
+
+
+
+    val program = for  {
+      _ <- IO.putStrLn(welcomeMsg)
+      _ <- doWhile(readCommand())( v => when(v)(c => handleCommand(c), f => IO.putStrLn(f).map(_ => true)) )
+    } yield ()
+
+
+    program.unsafePerformIO()
 
   }
 
