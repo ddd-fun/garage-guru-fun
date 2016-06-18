@@ -56,8 +56,9 @@ object CommandLineGarageGuru  {
       }
     }
 
+    def handleError(msg: String) =  IO.putStrLn(msg).map(_ => true)
 
-    def when[A,B](when: Validation[String,A])(onSuccess: A => IO[B], onFailure: String => IO[B]) = {
+    def whenValid[A,B](when: Validation[String,A])(onSuccess: A => IO[B], onFailure: String => IO[B]) = {
       when match  {
         case Success(c) => onSuccess(c)
         case Failure(m) => onFailure(m)  }
@@ -67,7 +68,7 @@ object CommandLineGarageGuru  {
 
     val program = for  {
       _ <- IO.putStrLn(welcomeMsg)
-      _ <- doWhile(readCommand())( v => when(v)(c => handleCommand(c), f => IO.putStrLn(f).map(_ => true)) )
+      _ <- doWhile(readCommand())(whenValid(_)(handleCommand(_), handleError(_)) )
     } yield ()
 
 
