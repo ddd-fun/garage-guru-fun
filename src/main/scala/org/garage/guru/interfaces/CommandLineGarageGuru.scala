@@ -13,12 +13,9 @@ object CommandLineGarageGuru  {
 
   def main(args: Array[String]) {
 
-
     Repository.addFreeLot(FreeParkingLot(LotLocation("A", "1"), CarSpec or MotorbikeSpec))
     Repository.addFreeLot(FreeParkingLot(LotLocation("A", "2"), CarSpec))
     Repository.addFreeLot(FreeParkingLot(LotLocation("B", "1"), MotorbikeSpec))
-
-
 
     implicit val ioMonad = new Monad[IO] {
       override def point[A](a: => A): IO[A] = IO(a)
@@ -65,10 +62,9 @@ object CommandLineGarageGuru  {
     }
 
 
-
     val program = for  {
       _ <- IO.putStrLn(welcomeMsg)
-      _ <- doWhile(readCommand())(whenValid(_)(handleCommand(_), handleError(_)) )
+      _ <- doWhile(readCommand)(whenValid(_)(handleCommand, handleError) )
     } yield ()
 
 
