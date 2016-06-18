@@ -17,12 +17,6 @@ object CommandLineGarageGuru  {
     Repository.addFreeLot(FreeParkingLot(LotLocation("A", "2"), CarSpec))
     Repository.addFreeLot(FreeParkingLot(LotLocation("B", "1"), MotorbikeSpec))
 
-    implicit val ioMonad = new Monad[IO] {
-      override def point[A](a: => A): IO[A] = IO(a)
-
-      override def bind[A, B](fa: IO[A])(f: (A) => IO[B]): IO[B] = fa.flatMap(f)
-    }
-
 
     implicit val show = new Show[Try[FreeParkingLots]] {
       override def shows(a: Try[FreeParkingLots]) = a.toString
@@ -32,7 +26,6 @@ object CommandLineGarageGuru  {
       override def shows(a: Try[LotLocation]) = a.toString
     }
 
-    import IO._
     import scala.language.higherKinds
     def doWhile[F[_], A](a: F[A])(f: A => F[Boolean])(implicit monad: Monad[F]): F[Unit] = {
       monad.bind(monad.bind(a)(f(_)))(if(_) doWhile(a)(f) else monad.point(Unit))
