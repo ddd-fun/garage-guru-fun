@@ -1,20 +1,25 @@
 package org.garage.guru.domain
 
-import scala.util.{Failure, Success, Try}
+import domain.ParkingAction
+
+import scala.util.{Failure}
 
 
-trait ParkingServiceInterpreter extends ParkingService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId] {
+object ParkingServiceInterpreter extends ParkingService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId] {
 
+  override def findFreeLot(vehicle: Vehicle) = ParkingAction{repo => repo.findFreeLot(vehicle)}
 
-  override def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle) = RepoInj{ repo =>
+  override def findParkedVehicle(vehicleId: VehicleId) = ParkingAction{repo => repo.findTakenLot(vehicleId)}
+
+  override def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle) = ParkingAction{ repo =>
     if (freeLot.acceptedVehicles.isSatisfiedBy(vehicle)) {
-      repo.save(new TakenParkingLot(freeLot.lotLocation, freeLot.acceptedVehicles, vehicle))
+      repo.save(TakenParkingLot(freeLot.lotLocation, freeLot.acceptedVehicles, vehicle))
     } else {
       Failure(new Exception(s"vehicle $vehicle doesn't satisfy accepted vehicle specification of $freeLot"))
     }
   }
 
-  override def cleanParkingLot(takenLot: TakenParkingLot) = RepoInj {
+  override def cleanParkingLot(takenLot: TakenParkingLot) = ParkingAction {
     repo => repo.save(FreeParkingLot(takenLot.lotLocation, takenLot.acceptedVehicles))
   }
 

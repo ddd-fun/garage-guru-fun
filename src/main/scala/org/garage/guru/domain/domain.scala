@@ -10,11 +10,11 @@ import scalaz.Bind
 
   type Repo = Repository[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId]
 
-  type RepoInj[A] = ReaderT[Try, Repo, A]
+  type ParkingAction[A] = ReaderT[Try, Repo, A]
 
   type DomainService = ParkingService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId]
 
-  type DomainServiceInj[A] = ReaderT[RepoInj, DomainService, A]
+  type DomainAction[A] = ReaderT[ParkingAction, DomainService, A]
 
 
   implicit val tryBind = TryBind
@@ -25,12 +25,12 @@ import scalaz.Bind
     override def map[A, B](fa: Try[A])(f: (A) => B): Try[B] = fa.map(f)
   }
 
-  object DomainServiceInj extends KleisliInstances with KleisliFunctions {
-    def apply[A](f: DomainService => RepoInj[A]): DomainServiceInj[A] = kleisli(f)
+  object DomainAction extends KleisliInstances with KleisliFunctions {
+    def apply[A](f: DomainService => ParkingAction[A]): DomainAction[A] = kleisli(f)
   }
 
-  object RepoInj extends KleisliInstances with KleisliFunctions {
-    def apply[A](f: Repo => Try[A]): RepoInj[A] = kleisli(f)
+  object ParkingAction extends KleisliInstances with KleisliFunctions {
+    def apply[A](f: Repo => Try[A]): ParkingAction[A] = kleisli(f)
   }
 
 

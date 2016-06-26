@@ -4,23 +4,21 @@ package org.garage.guru.application
 import org.garage.guru.domain._
 
 
-trait ParkingAppService {
+object ParkingAppService {
 
   import domain._
 
-  def findParkedVehicle(vehicleId: VehicleId) : DomainServiceInj[LotLocation] = {
-     DomainServiceInj{_.findParkedVehicle(vehicleId).map(_.lotLocation)}
-  }
+  def findParkedVehicle(vehicleId: VehicleId) =
+     DomainAction{_.findParkedVehicle(vehicleId).map(_.lotLocation)}
 
-  def freeLots(repo: Repo) = repo.freeLots()
+  def freeLots = ParkingAction{ _.freeLots()}
 
-  def parkVehicle(vehicle: Vehicle): DomainServiceInj[LotLocation] = {
-     DomainServiceInj{_.parkVehicle(vehicle).map(_.lotLocation)}
-  }
+  def parkVehicle(vehicle: Vehicle) =
+    DomainAction{_.parkVehicle(vehicle).map(_.lotLocation)}
 
-  def takeAwayVehicle(vehicleId: VehicleId) : DomainServiceInj[LotLocation]= {
-    DomainServiceInj{_.takeAwayVehicle(vehicleId).map(_.lotLocation)}
-  }
+
+  def takeAwayVehicle(vehicleId: VehicleId) =
+    DomainAction{_.takeAwayVehicle(vehicleId).map(_.lotLocation)}
 
 
 }
