@@ -5,7 +5,7 @@ import domain.ParkingAction
 import scala.util.{Failure}
 
 
-object ParkingServiceInterpreter extends ParkingService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId] {
+class ParkingServiceInterpreter extends ParkingService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId] {
 
   override def findFreeLot(vehicle: Vehicle) = ParkingAction{_.findFreeLot(vehicle)}
 

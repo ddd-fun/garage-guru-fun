@@ -13,6 +13,8 @@ object CommandLineGarageGuru  {
 
     object ApplicationService extends ParkingAppService
 
+    object ParkingService extends ParkingServiceInterpreter
+
     List(FreeParkingLot(LotLocation("A", "1"), CarSpec or MotorbikeSpec),
          FreeParkingLot(LotLocation("A", "2"), CarSpec),
          FreeParkingLot(LotLocation("B", "1"), MotorbikeSpec))
@@ -30,15 +32,15 @@ object CommandLineGarageGuru  {
         case Some(List("free")) => println( ApplicationService.freeLots(AppRepository) );
 
         case Some(List("park", t, v)) =>  Vehicle(t,v) match {
-               case Some(v) => println( ApplicationService.parkVehicle(v)(ParkingServiceInterpreter)(AppRepository) )
+               case Some(v) => println( ApplicationService.parkVehicle(v)(ParkingService)(AppRepository) )
                case _=> println("unknown command "+ln) }
 
         case Some(List("clean", v)) => Vehicle.id(v) match {
-               case Some(v) => println( ApplicationService.takeAwayVehicle(v)(ParkingServiceInterpreter)(AppRepository) )
+               case Some(v) => println( ApplicationService.takeAwayVehicle(v)(ParkingService)(AppRepository) )
                case _=> println("unknown command "+ln) }
 
         case Some(List("find", v)) => Vehicle.id(v) match {
-          case Some(v) => println( ApplicationService.findParkedVehicle(v)(ParkingServiceInterpreter)(AppRepository) )
+          case Some(v) => println( ApplicationService.findParkedVehicle(v)(ParkingService)(AppRepository) )
           case _=> println("unknown command "+ln) }
 
         case _=> println("unknown command "+ln)
