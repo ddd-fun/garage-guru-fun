@@ -7,9 +7,9 @@ import scala.util.{Failure}
 
 object ParkingServiceInterpreter extends ParkingService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId] {
 
-  override def findFreeLot(vehicle: Vehicle) = ParkingAction{repo => repo.findFreeLot(vehicle)}
+  override def findFreeLot(vehicle: Vehicle) = ParkingAction{_.findFreeLot(vehicle)}
 
-  override def findParkedVehicle(vehicleId: VehicleId) = ParkingAction{repo => repo.findTakenLot(vehicleId)}
+  override def findParkedVehicle(vehicleId: VehicleId) = ParkingAction{_.findTakenLot(vehicleId)}
 
   override def takeParkingLot(freeLot: FreeParkingLot, vehicle: Vehicle) = ParkingAction{ repo =>
     if (freeLot.acceptedVehicles.isSatisfiedBy(vehicle)) {
@@ -20,7 +20,7 @@ object ParkingServiceInterpreter extends ParkingService[FreeParkingLot, TakenPar
   }
 
   override def cleanParkingLot(takenLot: TakenParkingLot) = ParkingAction {
-    repo => repo.save(FreeParkingLot(takenLot.lotLocation, takenLot.acceptedVehicles))
+    _.save(FreeParkingLot(takenLot.lotLocation, takenLot.acceptedVehicles))
   }
 
 
