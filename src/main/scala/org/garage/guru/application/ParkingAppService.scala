@@ -4,7 +4,7 @@ package org.garage.guru.application
 import org.garage.guru.domain._
 
 
-object ParkingAppService {
+trait ParkingAppService {
 
   import domain._
 

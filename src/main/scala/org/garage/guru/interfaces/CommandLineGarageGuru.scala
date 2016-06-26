@@ -9,9 +9,15 @@ object CommandLineGarageGuru  {
   def main(args: Array[String]) {
 
 
-    InMemoryRepository.addFreeLot(FreeParkingLot(LotLocation("A", "1"), CarSpec or MotorbikeSpec))
-    InMemoryRepository.addFreeLot(FreeParkingLot(LotLocation("A", "2"), CarSpec))
-    InMemoryRepository.addFreeLot(FreeParkingLot(LotLocation("B", "1"), MotorbikeSpec))
+    object AppRepository extends InMemoryRepository
+
+    object ApplicationService extends ParkingAppService
+
+    List(FreeParkingLot(LotLocation("A", "1"), CarSpec or MotorbikeSpec),
+         FreeParkingLot(LotLocation("A", "2"), CarSpec),
+         FreeParkingLot(LotLocation("B", "1"), MotorbikeSpec))
+    .foreach(AppRepository.addFreeLot)
+
 
     println(welcomeMsg)
 
@@ -21,18 +27,18 @@ object CommandLineGarageGuru  {
 
         case Some(List("exit")) => scala.util.control.Breaks.break();
 
-        case Some(List("free")) => println( ParkingAppService.freeLots(InMemoryRepository) );
+        case Some(List("free")) => println( ApplicationService.freeLots(AppRepository) );
 
         case Some(List("park", t, v)) =>  Vehicle(t,v) match {
-               case Some(v) => println( ParkingAppService.parkVehicle(v)(ParkingServiceInterpreter)(InMemoryRepository) )
+               case Some(v) => println( ApplicationService.parkVehicle(v)(ParkingServiceInterpreter)(AppRepository) )
                case _=> println("unknown command "+ln) }
 
         case Some(List("clean", v)) => Vehicle.id(v) match {
-               case Some(v) => println( ParkingAppService.takeAwayVehicle(v)(ParkingServiceInterpreter)(InMemoryRepository) )
+               case Some(v) => println( ApplicationService.takeAwayVehicle(v)(ParkingServiceInterpreter)(AppRepository) )
                case _=> println("unknown command "+ln) }
 
         case Some(List("find", v)) => Vehicle.id(v) match {
-          case Some(v) => println( ParkingAppService.findParkedVehicle(v)(ParkingServiceInterpreter)(InMemoryRepository) )
+          case Some(v) => println( ApplicationService.findParkedVehicle(v)(ParkingServiceInterpreter)(AppRepository) )
           case _=> println("unknown command "+ln) }
 
         case _=> println("unknown command "+ln)
