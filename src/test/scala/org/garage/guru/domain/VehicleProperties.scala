@@ -7,15 +7,15 @@ import org.scalacheck.Prop._
 
 object VehicleIdProperties extends Properties("Vehicle id"){
 
-  val validVehicleIdStr = Gen.identifier
+  val validVehicleIdStrGen = Gen.identifier
 
-  val validVehicleId = validVehicleIdStr.map(Vehicle.id)
+  val validVehicleIdGen = validVehicleIdStrGen.map(Vehicle.id)
 
-  val invalidVehicleId = Gen.oneOf("", " ", "   ").map(Vehicle.id)
+  val invalidVehicleIdGen = Gen.oneOf("", " ", "   ").map(Vehicle.id)
 
-  property("vehicle id creation successful") = forAll(validVehicleId)(_.isDefined)
+  property("vehicle id creation successful") = forAll(validVehicleIdGen)(_.isDefined)
 
-  property("vehicle id creation failure") = forAll(invalidVehicleId){_.isEmpty}
+  property("vehicle id creation failure") = forAll(invalidVehicleIdGen){_.isEmpty}
 
 }
 
@@ -24,23 +24,23 @@ object VehicleProperties extends Properties("Vehicle"){
 
   import VehicleIdProperties._
 
-  var validVehicleType = Gen.oneOf("car", "motorbike")
+  var validVehicleTypeGen = Gen.oneOf("car", "motorbike")
 
-  var validVehicle = for{
-    id <- validVehicleIdStr
-    t <- validVehicleType
+  var validVehicleGen = for{
+    id <- validVehicleIdStrGen
+    t <- validVehicleTypeGen
   } yield (Vehicle(t,id))
 
-  var invalidVehicleType = Gen.alphaStr suchThat(s => s != "car" && s != "motorbike")
+  var invalidVehicleTypeGen = Gen.alphaStr suchThat(s => s != "car" && s != "motorbike")
 
-  var invalidVehicle = for {
-    id <- validVehicleIdStr
-    t <- invalidVehicleType
+  var invalidVehicleGen = for {
+    id <- validVehicleIdStrGen
+    t <- invalidVehicleTypeGen
   }yield (Vehicle(t, id))
 
 
-  property("vehicle successful creation") = forAll(validVehicle)(_.isDefined)
+  property("vehicle successful creation") = forAll(validVehicleGen)(_.isDefined)
 
-  property("vehicle fail creation") = forAll(invalidVehicle)(_.isEmpty)
+  property("vehicle fail creation") = forAll(invalidVehicleGen)(_.isEmpty)
 
 }
