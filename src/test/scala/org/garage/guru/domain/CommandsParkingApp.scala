@@ -25,7 +25,11 @@ object ParkingAppSpec extends Commands{
 
   type Sut = ParkingAppService
 
-   def canCreateNewSut(newState: InMemoryRepository, initSuts: Traversable[InMemoryRepository], runningSuts: Traversable[ParkingAppService]): Boolean = true
+   def canCreateNewSut(newState: InMemoryRepository,
+                       initSuts: Traversable[InMemoryRepository],
+                       runningSuts: Traversable[ParkingAppService]): Boolean = {
+     initSuts.isEmpty && runningSuts.isEmpty
+   }
 
    def destroySut(sut: ParkingAppService): Unit = ()
 
