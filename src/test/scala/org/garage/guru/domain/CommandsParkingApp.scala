@@ -31,45 +31,27 @@ object ParkingAppSpec extends Commands{
 
    def initialPreCondition(state: InMemoryRepository): Boolean = true
 
-   def genInitialState: Gen[InMemoryRepository] = Gen.const(new InMemoryRepository)
+   def genInitialState: Gen[InMemoryRepository] = {
+     val repo = new State
+     List(FreeParkingLot(LotLocation("A", "1"), CarSpec or MotorbikeSpec),
+          FreeParkingLot(LotLocation("A", "2"), CarSpec),
+          FreeParkingLot(LotLocation("B", "1"), MotorbikeSpec),
+          FreeParkingLot(LotLocation("B", "2"), CarSpec or MotorbikeSpec))
+        .foreach(repo.addFreeLot)
+     repo
+   }
 
    def newSut(state: InMemoryRepository): ParkingAppService = ParkingAppServiceSut
 
    def genCommand(state: InMemoryRepository): Gen[ParkingAppSpec.Command] = {
-    val lotLocationsGen = Gen.oneOf(("A", "1"), ("A","2"), ("A","3"), ("B","1"), ("B","2"), ("B","3"))
-      .map(t => LotLocation(t._1, t._2))
 
-    val freeLotGen = for{
-      loc <- lotLocationsGen
-      spec <- Gen.oneOf(CarSpec, MotorbikeSpec, CarSpec or MotorbikeSpec )
-    }yield (FreeParkingLot(loc, spec))
-
-
-    val addLotCommandGen = for{
-      free <- freeLotGen
-    }yield AddLot(free)
 
     val parkVehicleCommand = Gen.oneOf(Car(VehicleId("123")), Motorbike(VehicleId("5678"))).map(ParkVehicle(_))
 
     val takeAwayVehicleCommand = Gen.oneOf(VehicleId("123"), VehicleId("5678") ).map(TakeAwayVehicle(_))
 
-    Gen.frequency((5, Gen.const(FreeLots)), (100,parkVehicleCommand), (100, takeAwayVehicleCommand), (2, addLotCommandGen))
+    Gen.frequency((1, Gen.const(FreeLots)), (10,parkVehicleCommand), (10, takeAwayVehicleCommand))
 
-  }
-
-
-  case class AddLot(freeParkingLot: FreeParkingLot) extends UnitCommand{
-
-     def postCondition(state: InMemoryRepository, success: Boolean): Prop = success
-
-     def preCondition(state: InMemoryRepository): Boolean = state.findLotBy(freeParkingLot.lotLocation).isEmpty
-
-     def run(sut: ParkingAppService): Unit = ()
-
-     def nextState(state: InMemoryRepository): InMemoryRepository = {
-      state.addFreeLot(freeParkingLot)
-      state
-    }
   }
 
   case object FreeLots extends Command{
