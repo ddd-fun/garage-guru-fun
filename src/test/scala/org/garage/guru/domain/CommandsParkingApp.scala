@@ -1,12 +1,13 @@
 package org.garage.guru.domain
 
 
+import domain.DomainAction
 import org.garage.guru.application.ParkingAppService
 import org.garage.guru.infrastructure.InMemoryRepository
-import org.scalacheck.{Prop, Arbitrary, Gen, Properties}
+import org.scalacheck.{Prop, Gen, Properties}
 import org.scalacheck.commands.Commands
 
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 object CommandsParkingApp extends Properties("commands parking application"){
 
@@ -16,6 +17,7 @@ object CommandsParkingApp extends Properties("commands parking application"){
 
 object ParkingAppServiceSut extends ParkingAppService
 
+object DomainService extends ParkingServiceInterpreter
 
 object ParkingAppSpec extends Commands{
 
@@ -23,7 +25,7 @@ object ParkingAppSpec extends Commands{
 
   type Sut = ParkingAppService
 
-  def canCreateNewSut(newState: InMemoryRepository, initSuts: Traversable[InMemoryRepository], runningSuts: Traversable[ParkingAppService]): Boolean = true
+   def canCreateNewSut(newState: InMemoryRepository, initSuts: Traversable[InMemoryRepository], runningSuts: Traversable[ParkingAppService]): Boolean = true
 
    def destroySut(sut: ParkingAppService): Unit = ()
 
@@ -47,7 +49,11 @@ object ParkingAppSpec extends Commands{
       free <- freeLotGen
     }yield AddLot(free)
 
-    Gen.oneOf(addLotCommandGen, Gen.const(FreeLots))
+    val parkVehicleCommand = Gen.oneOf(Car(VehicleId("123")), Motorbike(VehicleId("5678"))).map(ParkVehicle(_))
+
+    val takeAwayVehicleCommand = Gen.oneOf(VehicleId("123"), VehicleId("5678") ).map(TakeAwayVehicle(_))
+
+    Gen.frequency((5, Gen.const(FreeLots)), (100,parkVehicleCommand), (100, takeAwayVehicleCommand), (2, addLotCommandGen))
 
   }
 
@@ -56,7 +62,7 @@ object ParkingAppSpec extends Commands{
 
      def postCondition(state: InMemoryRepository, success: Boolean): Prop = success
 
-     def preCondition(state: InMemoryRepository): Boolean = true
+     def preCondition(state: InMemoryRepository): Boolean = state.findLotBy(freeParkingLot.lotLocation).isEmpty
 
      def run(sut: ParkingAppService): Unit = ()
 
@@ -85,6 +91,49 @@ object ParkingAppSpec extends Commands{
 
      def nextState(state: InMemoryRepository): InMemoryRepository = state
 
+  }
+
+  case class ParkVehicle(vehicle: Vehicle) extends Command{
+
+     type Result = DomainAction[LotLocation]
+
+     def run(sut: Sut): Result = sut.parkVehicle(vehicle)
+
+     def preCondition(state: State): Boolean = true
+
+     def postCondition(state: State, result: Try[Result]): Prop = {
+        result match {
+          case Success(f) => f(DomainService)(state) match {
+            case Success(loc) => state.findLotBy(loc)
+              .map( p => p.isInstanceOf[TakenParkingLot] && p.asInstanceOf[TakenParkingLot].vehicle == vehicle  ).getOrElse[Boolean](false)
+            case _ => state.findFreeLot(vehicle).isFailure
+          }
+          case _ => false
+        }
+     }
+
+     def nextState(state: State): State = state
+  }
+
+  case class TakeAwayVehicle(vehicleId: VehicleId) extends Command{
+    type Result = DomainAction[LotLocation]
+
+    def run(sut: Sut): Result = sut.takeAwayVehicle(vehicleId)
+
+    override def preCondition(state: State): Boolean = true
+
+    override def postCondition(state: State, result: Try[Result]): Prop = {
+      result match {
+        case Success(f) => f(DomainService)(state) match {
+          case Success(loc) => state.findLotBy(loc)
+            .map( p => p.isInstanceOf[FreeParkingLot] ).getOrElse[Boolean](false)
+          case Failure(_) => true
+        }
+      }
+
+    }
+
+    override def nextState(state: State): State = state
   }
 
 

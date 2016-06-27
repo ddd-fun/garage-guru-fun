@@ -40,4 +40,8 @@ class InMemoryRepository extends Repository[FreeParkingLot, TakenParkingLot, Veh
 
     Success(FreeParkingLots(groupBySpec))
   }
+
+  def findLotBy(loc:LotLocation) = repo.get(loc)
+
+  override def toString = s"InMemoryRepository($repo)"
 }
