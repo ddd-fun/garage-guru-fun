@@ -36,7 +36,7 @@ object ParkingAppSpec extends Commands{
     //freeLots.foreach(repository.addFreeLot)
   }
 
-  case class State(freeCarLots:Int = 0, freeMtbLots: Int = 0, parkedVehicle:Set[Vehicle] = Set.empty[Vehicle]){
+  case class State(freeCarLots:Int, freeMtbLots: Int, parkedVehicle:Set[Vehicle]){
     def canPark(vehicle: Vehicle) = {
       vehicle match {
         case Car(_) => freeCarLots > 0
@@ -60,12 +60,12 @@ object ParkingAppSpec extends Commands{
 
    def initialPreCondition(state: State): Boolean = state.parkedVehicle.isEmpty
 
-   def genInitialState: Gen[State] = Gen.const(new State())
+   def genInitialState: Gen[State] = Gen.const(new State(0,0, Set.empty[Vehicle]))
 
    def newSut(state: State): Sut = new ParkingAppSut(ParkingAppServiceInstance, ParkingServiceInstance, new InMemoryRepository)
 
    def genCommand(state: State): Gen[ParkingAppSpec.Command] = {
-
+      println("state before " +state)
       if(state.isNoFreeLots) {
           for{
             level <- Gen.identifier
@@ -73,7 +73,9 @@ object ParkingAppSpec extends Commands{
             spec <- Gen.oneOf( CarSpec, MotorbikeSpec, CarSpec or MotorbikeSpec)
           }yield ( AddFreeLotCommand(FreeParkingLot(LotLocation(level, place), spec)))
       }else{
-        Gen.const(QueryFreeLotsCommand)
+       Gen.oneOf(
+        Gen.oneOf(vehicleList.filter(state.canPark)).map(ParkVehicleCommand),
+        Gen.const(QueryFreeLotsCommand))
       }
 
    }
@@ -105,36 +107,46 @@ object ParkingAppSpec extends Commands{
      def preCondition(state: State): Boolean = true
 
      def postCondition(state: State, result: Try[Try[FreeParkingLots]]): Prop = {
-//      result match {
-//        case Success(Success(r)) => {
-//           r.map.foldLeft((0,0))( _ match { case ( (carAmt, mtbAmt), (spec, amt) ) =>    }
-//        }
-//        case _ => false
-//      }
-      ???
+      result match {
+        case Success(Success(r)) => { println(groupByTwoTypes(r)); groupByTwoTypes(r) == (state.freeCarLots, state.freeMtbLots)}
+        case _ => false
+      }
      }
-     def nextState(state: State): State = state
+
+    def nextState(state: State): State = state
+
+    def groupByTwoTypes(freeParkingLots: FreeParkingLots) : (Int,Int) = {
+      freeParkingLots.map.foldLeft[(Int,Int)]((0,0))((acc, entry) => (acc, entry) match {
+        case ((carAmt, mtbAmt), (CarSpec, amt) )  => (carAmt+amt, mtbAmt)
+        case ((carAmt, mtbAmt), (MotorbikeSpec, amt) ) => (carAmt, mtbAmt+amt)
+        case ((carAmt, mtbAmt), (_, amt) ) => (carAmt+amt, mtbAmt+amt)
+      })
+    }
+
   }
 
 
-//  case class ParkVehicleCommand(vehicle: Vehicle) extends Command {
-//
-//     type Result = Try[LotLocation]
-//
-//     def run(sut: Sut): Result = sut.application.parkVehicle(vehicle)(sut.domainService)(sut.repository)
-//
-//     def preCondition(state: State): Boolean = state.canPark(vehicle)
-//
-//     def postCondition(state: State, result: Try[Result]): Prop = {
-//        result match {
-//           case Success(Success(_)) => true
-//           case Success(Failure(_)) => false
-//           case _ => false
-//         }
-//     }
-//
-//     def nextState(state: State): State =
-//  }
+  case class ParkVehicleCommand(vehicle: Vehicle) extends Command {
+
+     type Result = Try[LotLocation]
+
+     def run(sut: Sut): Result = sut.application.parkVehicle(vehicle)(sut.domainService)(sut.repository)
+
+     def preCondition(state: State): Boolean = state.canPark(vehicle)
+
+     def postCondition(state: State, result: Try[Result]): Prop = {
+        result match {
+           case Success(Success(_)) => true
+           case Success(Failure(_)) => false
+           case _ => false
+         }
+     }
+
+     def nextState(state: State): State = vehicle match {
+       case Car(_) => state.copy(freeCarLots = -1, parkedVehicle = state.parkedVehicle + vehicle)
+       case Motorbike(_) => state.copy(freeMtbLots = -1, parkedVehicle = state.parkedVehicle + vehicle)
+     }
+  }
 //
 //  case class TakeAwayVehicle(vehicle: Vehicle) extends Command{
 //
