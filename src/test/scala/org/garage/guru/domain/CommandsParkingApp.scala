@@ -1,7 +1,6 @@
 package org.garage.guru.domain
 
 
-import domain.DomainAction
 import org.garage.guru.application.ParkingAppService
 import org.garage.guru.infrastructure.InMemoryRepository
 import org.scalacheck.{Prop, Gen, Properties}
@@ -15,111 +14,161 @@ object CommandsParkingApp extends Properties("commands parking application"){
 
 }
 
-object ParkingAppServiceSut extends ParkingAppService
+object ParkingAppServiceInstance extends ParkingAppService
 
-object DomainService extends ParkingServiceInterpreter
+object ParkingServiceInstance extends ParkingServiceInterpreter
+
+//object RepositoryInstance extends InMemoryRepository
+
 
 object ParkingAppSpec extends Commands{
 
-  type State = InMemoryRepository
+  val freeLots = List(FreeParkingLot(LotLocation("A", "1"), CarSpec or MotorbikeSpec),
+                      FreeParkingLot(LotLocation("A", "2"), CarSpec),
+                      FreeParkingLot(LotLocation("B", "1"), MotorbikeSpec),
+                      FreeParkingLot(LotLocation("B", "2"), CarSpec or MotorbikeSpec))
 
-  type Sut = ParkingAppService
+  val vehicleList = List(Car(VehicleId("CA-1")),
+                         Motorbike(VehicleId("M-1")));
 
-   def canCreateNewSut(newState: InMemoryRepository,
-                       initSuts: Traversable[InMemoryRepository],
-                       runningSuts: Traversable[ParkingAppService]): Boolean = {
+
+  case class ParkingAppSut(application: ParkingAppService, domainService: ParkingService[FreeParkingLot, TakenParkingLot, Vehicle, VehicleId], repository: InMemoryRepository){
+    //freeLots.foreach(repository.addFreeLot)
+  }
+
+  case class State(freeCarLots:Int = 0, freeMtbLots: Int = 0, parkedVehicle:Set[Vehicle] = Set.empty[Vehicle]){
+    def canPark(vehicle: Vehicle) = {
+      vehicle match {
+        case Car(_) => freeCarLots > 0
+        case Motorbike(_) => freeMtbLots > 0
+      }
+    }
+    def findParked(vehicle: Vehicle) = parkedVehicle.find(_ == vehicle)
+
+    def isNoFreeLots = freeCarLots < 1 && freeMtbLots < 1
+  }
+
+   type Sut = ParkingAppSut
+
+   def canCreateNewSut(newState: State,
+                       initSuts: Traversable[State],
+                       runningSuts: Traversable[Sut]): Boolean = {
      initSuts.isEmpty && runningSuts.isEmpty
    }
 
-   def destroySut(sut: ParkingAppService): Unit = ()
+   def destroySut(sut: Sut): Unit = ()
 
-   def initialPreCondition(state: InMemoryRepository): Boolean = true
+   def initialPreCondition(state: State): Boolean = state.parkedVehicle.isEmpty
 
-   def genInitialState: Gen[InMemoryRepository] = {
-     val repo = new State
-     List(FreeParkingLot(LotLocation("A", "1"), CarSpec or MotorbikeSpec),
-          FreeParkingLot(LotLocation("A", "2"), CarSpec),
-          FreeParkingLot(LotLocation("B", "1"), MotorbikeSpec),
-          FreeParkingLot(LotLocation("B", "2"), CarSpec or MotorbikeSpec))
-        .foreach(repo.addFreeLot)
-     repo
+   def genInitialState: Gen[State] = Gen.const(new State())
+
+   def newSut(state: State): Sut = new ParkingAppSut(ParkingAppServiceInstance, ParkingServiceInstance, new InMemoryRepository)
+
+   def genCommand(state: State): Gen[ParkingAppSpec.Command] = {
+
+      if(state.isNoFreeLots) {
+          for{
+            level <- Gen.identifier
+            place <- Gen.identifier
+            spec <- Gen.oneOf( CarSpec, MotorbikeSpec, CarSpec or MotorbikeSpec)
+          }yield ( AddFreeLotCommand(FreeParkingLot(LotLocation(level, place), spec)))
+      }else{
+        Gen.const(QueryFreeLotsCommand)
+      }
+
    }
 
-   def newSut(state: InMemoryRepository): ParkingAppService = ParkingAppServiceSut
 
-   def genCommand(state: InMemoryRepository): Gen[ParkingAppSpec.Command] = {
+  case class AddFreeLotCommand(freeLot : FreeParkingLot) extends UnitCommand{
+    def postCondition(state: State, success: Boolean): Prop = success
 
+    def preCondition(state: State): Boolean = true
 
-    val parkVehicleCommand = Gen.oneOf(Car(VehicleId("123")), Motorbike(VehicleId("5678"))).map(ParkVehicle(_))
+    def run(sut: ParkingAppSut): Unit = sut.repository.addFreeLot(freeLot)
 
-    val takeAwayVehicleCommand = Gen.oneOf(VehicleId("123"), VehicleId("5678") ).map(TakeAwayVehicle(_))
-
-    Gen.frequency((1, Gen.const(FreeLots)), (10,parkVehicleCommand), (10, takeAwayVehicleCommand))
-
-  }
-
-  case object FreeLots extends Command{
-
-    import domain.ParkingAction
-
-    type Result = ParkingAction[FreeParkingLots]
-
-     def run(sut: ParkingAppService): ParkingAction[FreeParkingLots] = sut.freeLots
-
-     def preCondition(state: InMemoryRepository): Boolean = true
-
-     def postCondition(state: InMemoryRepository, result: Try[ParkingAction[FreeParkingLots]]): Prop = {
-      result match {
-        case Success(f) => f(state) == state.freeLots()
-        case _ => false;
+    def nextState(state: State): State = {
+      freeLot.acceptedVehicles match {
+        case CarSpec => state.copy(freeCarLots = +1)
+        case MotorbikeSpec => state.copy(freeMtbLots = +1)
+          //TODO this is potentially a gap. recursive design is needed for spec composition
+        case _ => state.copy(freeCarLots = +1, freeMtbLots = +1 )
       }
     }
-
-     def nextState(state: InMemoryRepository): InMemoryRepository = state
-
   }
 
-  case class ParkVehicle(vehicle: Vehicle) extends Command{
+  case object QueryFreeLotsCommand extends Command{
 
-     type Result = DomainAction[LotLocation]
+     type Result = Try[FreeParkingLots]
 
-     def run(sut: Sut): Result = sut.parkVehicle(vehicle)
+     def run(sut: Sut): Try[FreeParkingLots] = sut.application.freeLots(sut.repository)
 
      def preCondition(state: State): Boolean = true
 
-     def postCondition(state: State, result: Try[Result]): Prop = {
-        result match {
-          case Success(f) => f(DomainService)(state) match {
-            case Success(loc) => state.findLotBy(loc)
-              .map( p => p.isInstanceOf[TakenParkingLot] && p.asInstanceOf[TakenParkingLot].vehicle == vehicle  ).getOrElse[Boolean](false)
-            case _ => state.findFreeLot(vehicle).isFailure
-          }
-          case _ => false
-        }
+     def postCondition(state: State, result: Try[Try[FreeParkingLots]]): Prop = {
+//      result match {
+//        case Success(Success(r)) => {
+//           r.map.foldLeft((0,0))( _ match { case ( (carAmt, mtbAmt), (spec, amt) ) =>    }
+//        }
+//        case _ => false
+//      }
+      ???
      }
-
      def nextState(state: State): State = state
   }
 
-  case class TakeAwayVehicle(vehicleId: VehicleId) extends Command{
-    type Result = DomainAction[LotLocation]
 
-    def run(sut: Sut): Result = sut.takeAwayVehicle(vehicleId)
+//  case class ParkVehicleCommand(vehicle: Vehicle) extends Command {
+//
+//     type Result = Try[LotLocation]
+//
+//     def run(sut: Sut): Result = sut.application.parkVehicle(vehicle)(sut.domainService)(sut.repository)
+//
+//     def preCondition(state: State): Boolean = state.canPark(vehicle)
+//
+//     def postCondition(state: State, result: Try[Result]): Prop = {
+//        result match {
+//           case Success(Success(_)) => true
+//           case Success(Failure(_)) => false
+//           case _ => false
+//         }
+//     }
+//
+//     def nextState(state: State): State =
+//  }
+//
+//  case class TakeAwayVehicle(vehicle: Vehicle) extends Command{
+//
+//    type Result = Try[LotLocation]
+//
+//    def run(sut: Sut): Result = sut.application.takeAwayVehicle(vehicle.vehicleId)(sut.domainService)(sut.repository)
+//
+//    override def preCondition(state: State): Boolean =  {state._2.contains(vehicle)}
+//
+//    override def postCondition(state: State, result: Try[Result]): Prop = {
+//        result match {
+//          case Success(Success(_)) => if(state._2.contains(vehicle)) true else false
+//          case Success(Failure(_)) => if(state._2.contains(vehicle)) false else true
+//          case _=> false
+//        }
+//    }
+//
+//    override def nextState(state: State): State = {
+//      println("state before "  + state)
+//      val l = removeFirst(state._2, (v:Vehicle) =>  v == vehicle )
+//      println("after remove "+vehicle +" is  "  + l)
+//      state._1.map.find(pair => pair._1.isSatisfiedBy(vehicle) ) match {
+//        case Some((spec, amt))  => state.copy( FreeParkingLots(state._1.map + ((spec, amt-1))), l)
+//        case _ => state
+//      }
+//    }
+//  }
 
-    override def preCondition(state: State): Boolean = true
 
-    override def postCondition(state: State, result: Try[Result]): Prop = {
-      result match {
-        case Success(f) => f(DomainService)(state) match {
-          case Success(loc) => state.findLotBy(loc)
-            .map( p => p.isInstanceOf[FreeParkingLot] ).getOrElse[Boolean](false)
-          case Failure(_) => true
-        }
-      }
-
+  def removeFirst[A](l:List[A], p: A => Boolean): List[A] = {
+    l match {
+       case h :: t => if(p(h)) t else removeFirst(t, p)
+       case v@_ => v
     }
-
-    override def nextState(state: State): State = state
   }
 
 
